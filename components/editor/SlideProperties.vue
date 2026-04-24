@@ -47,12 +47,12 @@ const templateOptions = [
 
     <div class="divider" />
 
-    <CoverFields v-if="slide.template === 'cover'" :data="slide.data as any" :presentation-id="presentationId" :slide-id="slide.id" @update="onDataUpdate" />
-    <SectionFields v-else-if="slide.template === 'section'" :data="slide.data as any" @update="onDataUpdate" />
-    <ContentFields v-else-if="slide.template === 'content'" :data="slide.data as any" :presentation-id="presentationId" :slide-id="slide.id" @update="onDataUpdate" />
-    <DiagramFields v-else-if="slide.template === 'diagram'" :data="slide.data as any" :presentation-id="presentationId" :slide-id="slide.id" @update="onDataUpdate" />
-    <CodeFields v-else-if="slide.template === 'code'" :data="slide.data as any" @update="onDataUpdate" />
-    <ComparisonFields v-else-if="slide.template === 'comparison'" :data="slide.data as any" @update="onDataUpdate" />
+    <TemplatesCoverFields v-if="slide.template === 'cover'" :data="slide.data as any" :presentation-id="presentationId" :slide-id="slide.id" @update="onDataUpdate" />
+    <TemplatesSectionFields v-else-if="slide.template === 'section'" :data="slide.data as any" @update="onDataUpdate" />
+    <TemplatesContentFields v-else-if="slide.template === 'content'" :data="slide.data as any" :presentation-id="presentationId" :slide-id="slide.id" @update="onDataUpdate" />
+    <TemplatesDiagramFields v-else-if="slide.template === 'diagram'" :data="slide.data as any" :presentation-id="presentationId" :slide-id="slide.id" @update="onDataUpdate" />
+    <TemplatesCodeFields v-else-if="slide.template === 'code'" :data="slide.data as any" @update="onDataUpdate" />
+    <TemplatesComparisonFields v-else-if="slide.template === 'comparison'" :data="slide.data as any" @update="onDataUpdate" />
 
     <div class="divider" />
 

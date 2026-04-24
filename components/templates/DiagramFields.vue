@@ -65,7 +65,7 @@ async function onExcalidrawSave(payload: { scene: string; svg: string }) {
 
     <label>Legenda (opcional)<input :value="data.caption" @input="update('caption', ($event.target as HTMLInputElement).value)" /></label>
 
-    <ExcalidrawModal
+    <EditorExcalidrawModal
       v-if="showExcalidraw"
       :scene="data.excalidraw_scene"
       @save="onExcalidrawSave"

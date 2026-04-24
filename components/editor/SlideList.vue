@@ -55,7 +55,7 @@ const TEMPLATE_COLORS: Record<string, string> = {
 
     <button class="add-btn" @click="showTemplateSelector = true">+ Novo slide</button>
 
-    <TemplateSelector v-if="showTemplateSelector" @select="handleAdd" @close="showTemplateSelector = false" />
+    <EditorTemplateSelector v-if="showTemplateSelector" @select="handleAdd" @close="showTemplateSelector = false" />
   </div>
 </template>
 

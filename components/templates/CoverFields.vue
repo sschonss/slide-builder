@@ -33,7 +33,7 @@ async function onExcalidrawSave(payload: { scene: string; svg: string }) {
     <label>Background image (path)<input :value="data.background_image" @input="update('background_image', ($event.target as HTMLInputElement).value)" placeholder="caminho da imagem..." /></label>
     <button class="excalidraw-btn" @click="showExcalidraw = true">🎨 Editar background com Excalidraw</button>
 
-    <ExcalidrawModal
+    <EditorExcalidrawModal
       v-if="showExcalidraw"
       @save="onExcalidrawSave"
       @close="showExcalidraw = false"
