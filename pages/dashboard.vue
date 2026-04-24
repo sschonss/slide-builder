@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Plus, Upload, Trash2, Globe, Lock } from 'lucide-vue-next'
+import { Plus, Upload, Trash2, Globe, Lock, Loader2 } from 'lucide-vue-next'
 
 definePageMeta({ middleware: 'auth' })
 
 const { data: presentations, refresh } = useFetch('/api/presentations')
+const importing = ref(false)
 
 async function createPresentation() {
   const title = prompt('Nome da apresentação:')
@@ -19,6 +20,7 @@ async function importPresentation() {
   input.onchange = async () => {
     const file = input.files?.[0]
     if (!file) return
+    importing.value = true
     try {
       const text = await file.text()
       const bundle = JSON.parse(text)
@@ -26,6 +28,8 @@ async function importPresentation() {
       navigateTo(`/editor/${result.id}`)
     } catch {
       alert('Erro ao importar arquivo.')
+    } finally {
+      importing.value = false
     }
   }
   input.click()
@@ -50,7 +54,11 @@ async function toggleVisibility(p: any) {
       <h1>Minhas Apresentações</h1>
       <div class="actions">
         <button class="btn-primary" @click="createPresentation"><Plus :size="14" /> Nova</button>
-        <button class="btn-import" @click="importPresentation"><Upload :size="14" /> Importar</button>
+        <button class="btn-import" @click="importPresentation" :disabled="importing">
+          <Loader2 v-if="importing" :size="14" class="spin" />
+          <Upload v-else :size="14" />
+          {{ importing ? 'Importando...' : 'Importar' }}
+        </button>
       </div>
     </header>
 
@@ -74,6 +82,15 @@ async function toggleVisibility(p: any) {
       <p>Nenhuma apresentação ainda.</p>
       <button class="btn-primary" @click="createPresentation">Criar primeira</button>
     </div>
+    <!-- Import overlay -->
+    <Teleport to="body">
+      <div v-if="importing" class="import-overlay">
+        <div class="import-modal">
+          <Loader2 :size="32" class="spin" />
+          <p>Importando apresentação...</p>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -100,4 +117,10 @@ async function toggleVisibility(p: any) {
 .btn-delete:hover { color: #f85149; }
 .empty { text-align: center; padding: 80px 0; color: #8b949e; }
 .empty .btn-primary { margin-top: 16px; }
+.btn-import:disabled { opacity: 0.6; cursor: not-allowed; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.import-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 999; }
+.import-modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 40px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; color: #e6edf3; }
+.import-modal .spin { color: #e94560; }
 </style>
