@@ -58,9 +58,13 @@ async function regenerateMarkdown() {
   } catch {}
 }
 
-async function handlePresent() {
-  await $fetch('/api/generate', { method: 'POST', body: { presentation_id: presentationId } })
-  alert('Markdown gerado! Slidev integration coming soon.')
+function handlePresent() {
+  const presenterUrl = `/presenter/${presentationId}`
+  const presentUrl = `/present/${presentationId}`
+  // Open presenter view (controls, notes, timer)
+  window.open(presenterUrl, 'presenter', 'width=900,height=700')
+  // Open presentation view (fullscreen slide)
+  window.open(presentUrl, 'present')
 }
 
 async function handleExport() {
