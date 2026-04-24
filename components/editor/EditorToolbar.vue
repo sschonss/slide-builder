@@ -2,26 +2,72 @@
 const props = defineProps<{ title: string; slideIndex: number; totalSlides: number; presentationId: string }>()
 const emit = defineEmits<{
   (e: 'present'): void
-  (e: 'export'): void
   (e: 'openTheme'): void
   (e: 'navigate', direction: 'prev' | 'next'): void
 }>()
 
+const showSaveMenu = ref(false)
 const exporting = ref(false)
 
-async function handleExport() {
+function toggleSaveMenu() {
+  showSaveMenu.value = !showSaveMenu.value
+}
+
+function closeSaveMenu() {
+  showSaveMenu.value = false
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleOutsideClick)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick)
+})
+
+function handleOutsideClick(e: Event) {
+  const dropdown = document.querySelector('.dropdown')
+  if (dropdown && !dropdown.contains(e.target as Node)) {
+    showSaveMenu.value = false
+  }
+}
+
+function safeName() {
+  return props.title.replace(/[^a-zA-Z0-9-_ ]/g, '') || 'presentation'
+}
+
+async function downloadPdf() {
+  closeSaveMenu()
   exporting.value = true
-  emit('export')
-  setTimeout(() => { exporting.value = false }, 3000)
+  try {
+    await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ presentation_id: props.presentationId }) })
+    const res = await fetch('/api/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ presentation_id: props.presentationId }) })
+    const data = await res.json()
+    if (!data.success) throw new Error(data.message)
+    // Fetch the generated PDF file
+    const pdfRes = await fetch(`/api/export-file?path=${encodeURIComponent(data.path)}`)
+    const blob = await pdfRes.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${safeName()}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (err: any) {
+    alert('Erro ao exportar PDF: ' + (err.message || err))
+  } finally {
+    exporting.value = false
+  }
 }
 
 async function downloadBundle() {
+  closeSaveMenu()
   const res = await fetch(`/api/export-bundle?id=${props.presentationId}`)
   const blob = await res.blob()
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `${props.title.replace(/[^a-zA-Z0-9-_ ]/g, '')}.slidebuilder`
+  a.download = `${safeName()}.slidebuilder`
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -40,8 +86,15 @@ async function downloadBundle() {
     </div>
     <div class="toolbar-right">
       <button class="btn" @click="emit('present')">▶ Apresentar</button>
-      <button class="btn" @click="handleExport" :disabled="exporting">📄 {{ exporting ? 'Exportando...' : 'PDF' }}</button>
-      <button class="btn" @click="downloadBundle">💾 Salvar</button>
+      <div class="dropdown">
+        <button class="btn" @click.stop="toggleSaveMenu" :disabled="exporting">
+          💾 {{ exporting ? 'Exportando...' : 'Salvar ▾' }}
+        </button>
+        <div class="dropdown-menu" v-if="showSaveMenu">
+          <button class="dropdown-item" @click="downloadPdf">📄 PDF</button>
+          <button class="dropdown-item" @click="downloadBundle">📦 Slide Builder</button>
+        </div>
+      </div>
       <button class="btn" @click="emit('openTheme')">🎨 Tema</button>
     </div>
   </div>
@@ -59,4 +112,8 @@ async function downloadBundle() {
 .btn, .nav-btn { background: rgba(255,255,255,0.08); color: #e6edf3; border: 1px solid #30363d; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
 .btn:hover, .nav-btn:hover { background: rgba(255,255,255,0.15); }
 .btn:disabled, .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.dropdown { position: relative; }
+.dropdown-menu { position: absolute; top: 100%; right: 0; margin-top: 4px; background: #1c2128; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; z-index: 100; min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.dropdown-item { display: block; width: 100%; padding: 8px 14px; background: none; border: none; color: #e6edf3; font-size: 13px; cursor: pointer; text-align: left; }
+.dropdown-item:hover { background: rgba(255,255,255,0.1); }
 </style>

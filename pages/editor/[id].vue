@@ -86,7 +86,6 @@ async function handleExport() {
       :total-slides="slides.length"
       :presentation-id="presentationId"
       @present="handlePresent"
-      @export="handleExport"
       @open-theme="showThemeEditor = true"
       @navigate="navigateSlide"
     />
