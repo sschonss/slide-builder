@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ContentData } from '~/types'
-const props = defineProps<{ data: ContentData }>()
+const props = defineProps<{ data: ContentData; presentationId?: string; slideId?: string }>()
 const emit = defineEmits<{ (e: 'update', data: ContentData): void }>()
+
+const showExcalidraw = ref(false)
 
 function updateTitle(value: string) {
   emit('update', { ...props.data, title: value })
@@ -25,6 +27,21 @@ function removeBullet(index: number) {
 function updateQuote(value: string) {
   emit('update', { ...props.data, quote: value })
 }
+
+async function onExcalidrawSave(payload: { scene: string; svg: string }) {
+  showExcalidraw.value = false
+  if (props.presentationId && props.slideId) {
+    const result = await $fetch('/api/assets/save-svg', {
+      method: 'POST',
+      body: {
+        presentation_id: props.presentationId,
+        slide_id: props.slideId,
+        svg: payload.svg,
+      },
+    })
+    emit('update', { ...props.data, image: (result as any).path })
+  }
+}
 </script>
 
 <template>
@@ -39,6 +56,15 @@ function updateQuote(value: string) {
     <button class="add-btn" @click="addBullet">+ Bullet</button>
 
     <label>Quote (opcional)<textarea :value="data.quote" @input="updateQuote(($event.target as HTMLTextAreaElement).value)" rows="2" /></label>
+
+    <label>Imagem (path)<input :value="data.image" @input="emit('update', { ...data, image: ($event.target as HTMLInputElement).value })" placeholder="caminho da imagem..." /></label>
+    <button class="excalidraw-btn" @click="showExcalidraw = true">🎨 Criar/editar imagem com Excalidraw</button>
+
+    <ExcalidrawModal
+      v-if="showExcalidraw"
+      @save="onExcalidrawSave"
+      @close="showExcalidraw = false"
+    />
   </div>
 </template>
 
@@ -51,4 +77,6 @@ input, textarea { background: rgba(255,255,255,0.05); border: 1px solid #30363d;
 .bullet-row input { flex: 1; }
 .remove { background: none; border: none; color: #f85149; font-size: 16px; cursor: pointer; padding: 0 4px; }
 .add-btn { background: none; border: 1px dashed #30363d; border-radius: 4px; padding: 6px; color: #8b949e; cursor: pointer; font-size: 11px; }
+.excalidraw-btn { background: #533483; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.excalidraw-btn:hover { background: #6b44a8; }
 </style>
