@@ -12,6 +12,7 @@ const emit = defineEmits<{
 const showDownloadMenu = ref(false)
 const downloading = ref(false)
 const saving = ref(false)
+const { exporting: exportingPdf, progress: pdfProgress, exportToPdf } = useExportPdf()
 
 function toggleDownloadMenu() { showDownloadMenu.value = !showDownloadMenu.value }
 function closeDownloadMenu() { showDownloadMenu.value = false }
@@ -39,25 +40,7 @@ async function handleSave() {
 
 async function downloadPdf() {
   closeDownloadMenu()
-  downloading.value = true
-  try {
-    await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ presentation_id: props.presentationId }) })
-    const res = await fetch('/api/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ presentation_id: props.presentationId }) })
-    const data = await res.json()
-    if (!data.success) throw new Error(data.message)
-    const pdfRes = await fetch(`/api/export-file?id=${props.presentationId}`)
-    const blob = await pdfRes.blob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${safeName()}.pdf`
-    a.click()
-    URL.revokeObjectURL(url)
-  } catch (err: any) {
-    alert('Erro ao exportar PDF: ' + (err.message || err))
-  } finally {
-    downloading.value = false
-  }
+  await exportToPdf(props.presentationId, props.title)
 }
 
 async function downloadBundle() {
@@ -97,18 +80,28 @@ async function downloadBundle() {
       </button>
       <button class="btn" @click="emit('present')"><Play :size="13" /> Apresentar</button>
       <div class="dropdown">
-        <button class="btn" @click.stop="toggleDownloadMenu" :disabled="downloading">
-          <Loader2 v-if="downloading" :size="13" class="spin" />
+        <button class="btn" @click.stop="toggleDownloadMenu" :disabled="downloading || exportingPdf">
+          <Loader2 v-if="downloading || exportingPdf" :size="13" class="spin" />
           <Download v-else :size="13" />
-          {{ downloading ? 'Baixando...' : 'Baixar' }} <ChevronDown :size="11" />
+          {{ exportingPdf ? 'Exportando...' : downloading ? 'Baixando...' : 'Baixar' }} <ChevronDown :size="11" />
         </button>
         <div class="dropdown-menu" v-if="showDownloadMenu">
-          <button class="dropdown-item" @click="downloadPdf"><FileText :size="14" /> Exportar PDF</button>
+          <button class="dropdown-item" @click="downloadPdf" :disabled="exportingPdf"><FileText :size="14" /> Exportar PDF</button>
           <button class="dropdown-item" @click="downloadBundle"><Package :size="14" /> Arquivo .slidebuilder</button>
         </div>
       </div>
       <button class="btn" @click="emit('openTheme')"><Palette :size="13" /> Tema</button>
     </div>
+
+    <!-- PDF export overlay -->
+    <Teleport to="body">
+      <div v-if="exportingPdf" class="pdf-overlay">
+        <div class="pdf-modal">
+          <Loader2 :size="32" class="spin" />
+          <p>{{ pdfProgress }}</p>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -132,4 +125,8 @@ async function downloadBundle() {
 .dropdown-menu { position: absolute; top: 100%; right: 0; margin-top: 4px; background: #1c2128; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; z-index: 100; min-width: 200px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
 .dropdown-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 14px; background: none; border: none; color: #e6edf3; font-size: 13px; cursor: pointer; text-align: left; }
 .dropdown-item:hover { background: rgba(255,255,255,0.1); }
+.dropdown-item:disabled { opacity: 0.4; cursor: not-allowed; }
+.pdf-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 999; }
+.pdf-modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 40px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; color: #e6edf3; }
+.pdf-modal .spin { color: #e94560; }
 </style>
