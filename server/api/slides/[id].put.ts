@@ -1,11 +1,10 @@
-import { getDb } from '../../utils/db'
+import { dbGet, dbRun } from '../../utils/db'
 import { saveBackup } from '../../utils/backup'
 import { logChange } from '../../utils/changelog'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const body = await readBody(event)
-  const db = getDb()
 
   const fields: string[] = []
   const values: any[] = []
@@ -17,16 +16,16 @@ export default defineEventHandler(async (event) => {
   if (fields.length === 0) return { success: true }
 
   values.push(id)
-  db.prepare(`UPDATE slides SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+  await dbRun(`UPDATE slides SET ${fields.join(', ')} WHERE id = ?`, values)
 
-  const slide = db.prepare('SELECT presentation_id, "order", template FROM slides WHERE id = ?').get(id) as any
+  const slide = await dbGet('SELECT presentation_id, "order", template FROM slides WHERE id = ?', [id]) as any
   if (slide) {
-    db.prepare("UPDATE presentations SET updated_at = datetime('now') WHERE id = ?").run(slide.presentation_id)
-    saveBackup(slide.presentation_id)
+    await dbRun("UPDATE presentations SET updated_at = datetime('now') WHERE id = ?", [slide.presentation_id])
+    await saveBackup(slide.presentation_id)
 
     const changed = Object.keys(body).filter(k => k !== 'template' || body.template !== slide.template)
     const detail = changed.includes('notes') ? 'notas' : 'conteúdo'
-    logChange(slide.presentation_id, 'edit', `Editou ${detail} do slide ${slide.order + 1} (${slide.template})`)
+    await logChange(slide.presentation_id, 'edit', `Editou ${detail} do slide ${slide.order + 1} (${slide.template})`)
   }
 
   return { success: true }

@@ -1,9 +1,8 @@
-import { getDb } from '../../utils/db'
+import { dbGet } from '../../utils/db'
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
-  const db = getDb()
-  const row = db.prepare('SELECT * FROM themes WHERE id = ?').get(id) as any
+  const row = await dbGet('SELECT * FROM themes WHERE id = ?', [id]) as any
 
   if (!row) throw createError({ statusCode: 404, message: 'Theme not found' })
 

@@ -1,4 +1,4 @@
-import { getDb } from '../../utils/db'
+import { dbRun } from '../../utils/db'
 import { v4 as uuid } from 'uuid'
 import { writeFileSync, mkdirSync } from 'fs'
 import { join, extname } from 'path'
@@ -17,7 +17,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'file and presentation_id required' })
   }
 
-  const db = getDb()
   const id = uuid()
   const ext = extname(file.filename || '.png')
   const filename = `${id}${ext}`
@@ -29,9 +28,10 @@ export default defineEventHandler(async (event) => {
 
   const relativePath = `data/assets/${presentationId}/${filename}`
 
-  db.prepare(
-    'INSERT INTO assets (id, presentation_id, filename, path, type) VALUES (?, ?, ?, ?, ?)'
-  ).run(id, presentationId, file.filename || filename, relativePath, fileType)
+  await dbRun(
+    'INSERT INTO assets (id, presentation_id, filename, path, type) VALUES (?, ?, ?, ?, ?)',
+    [id, presentationId, file.filename || filename, relativePath, fileType]
+  )
 
   return { id, filename: file.filename, path: relativePath, type: fileType }
 })

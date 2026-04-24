@@ -1,10 +1,9 @@
-import { getDb } from '../../utils/db'
+import { dbAll } from '../../utils/db'
 
-export default defineEventHandler(() => {
-  const db = getDb()
-  const rows = db.prepare('SELECT * FROM themes ORDER BY name').all() as any[]
+export default defineEventHandler(async () => {
+  const rows = await dbAll('SELECT * FROM themes ORDER BY name')
   return rows.map(row => ({
     ...row,
-    config: JSON.parse(row.config),
+    config: JSON.parse((row as any).config),
   }))
 })

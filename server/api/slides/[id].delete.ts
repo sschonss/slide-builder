@@ -1,25 +1,26 @@
-import { getDb } from '../../utils/db'
+import { dbGet, dbAll, dbRun } from '../../utils/db'
 import { saveBackup } from '../../utils/backup'
 import { logChange } from '../../utils/changelog'
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
-  const db = getDb()
 
-  const slide = db.prepare('SELECT presentation_id, "order", template FROM slides WHERE id = ?').get(id) as any
-  db.prepare('DELETE FROM slides WHERE id = ?').run(id)
+  const slide = await dbGet('SELECT presentation_id, "order", template FROM slides WHERE id = ?', [id]) as any
+  await dbRun('DELETE FROM slides WHERE id = ?', [id])
 
   if (slide) {
-    const remaining = db.prepare(
-      'SELECT id FROM slides WHERE presentation_id = ? ORDER BY "order" ASC'
-    ).all(slide.presentation_id) as any[]
+    const remaining = await dbAll(
+      'SELECT id FROM slides WHERE presentation_id = ? ORDER BY "order" ASC',
+      [slide.presentation_id]
+    ) as any[]
 
-    const update = db.prepare('UPDATE slides SET "order" = ? WHERE id = ?')
-    remaining.forEach((s: any, i: number) => update.run(i, s.id))
+    for (let i = 0; i < remaining.length; i++) {
+      await dbRun('UPDATE slides SET "order" = ? WHERE id = ?', [i, remaining[i].id])
+    }
 
-    db.prepare("UPDATE presentations SET updated_at = datetime('now') WHERE id = ?").run(slide.presentation_id)
-    saveBackup(slide.presentation_id)
-    logChange(slide.presentation_id, 'delete', `Removeu slide ${slide.order + 1} (${slide.template})`)
+    await dbRun("UPDATE presentations SET updated_at = datetime('now') WHERE id = ?", [slide.presentation_id])
+    await saveBackup(slide.presentation_id)
+    await logChange(slide.presentation_id, 'delete', `Removeu slide ${slide.order + 1} (${slide.template})`)
   }
 
   return { success: true }

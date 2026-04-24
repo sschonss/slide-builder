@@ -1,16 +1,15 @@
-import { getDb } from '../../../utils/db'
+import { dbAll } from '../../../utils/db'
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
-  const db = getDb()
 
-  const changes = db.prepare(`
+  const changes = await dbAll(`
     SELECT action, description, slide_hash, created_at,
            CASE WHEN snapshot IS NOT NULL THEN 1 ELSE 0 END as has_snapshot
     FROM change_log
     WHERE presentation_id = ?
     ORDER BY id DESC
-  `).all(id)
+  `, [id])
 
   return changes
 })

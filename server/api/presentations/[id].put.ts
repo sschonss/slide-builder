@@ -1,9 +1,8 @@
-import { getDb } from '../../utils/db'
+import { dbRun } from '../../utils/db'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const body = await readBody(event)
-  const db = getDb()
 
   const fields: string[] = []
   const values: any[] = []
@@ -14,7 +13,7 @@ export default defineEventHandler(async (event) => {
   fields.push("updated_at = datetime('now')")
   values.push(id)
 
-  db.prepare(`UPDATE presentations SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+  await dbRun(`UPDATE presentations SET ${fields.join(', ')} WHERE id = ?`, values)
 
   return { success: true }
 })

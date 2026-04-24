@@ -1,24 +1,22 @@
-import Database from 'better-sqlite3'
+import { createClient, type Client } from '@libsql/client'
 import { v4 as uuid } from 'uuid'
-import { join } from 'path'
 
-let _db: Database.Database | null = null
+let _client: Client | null = null
 
-export function getDb(): Database.Database {
-  if (_db) return _db
-
-  const dbPath = join(process.cwd(), 'data', 'database.sqlite')
-  _db = new Database(dbPath)
-  _db.pragma('journal_mode = WAL')
-  _db.pragma('foreign_keys = ON')
-
-  return _db
+export function getClient(): Client {
+  if (_client) return _client
+  const config = useRuntimeConfig()
+  _client = createClient({
+    url: config.tursoUrl || 'file:data/database.sqlite',
+    authToken: config.tursoToken || undefined,
+  })
+  return _client
 }
 
-export function initDb() {
-  const db = getDb()
+export async function initDb() {
+  const client = getClient()
 
-  db.exec(`
+  await client.executeMultiple(`
     CREATE TABLE IF NOT EXISTS themes (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL UNIQUE,
@@ -62,7 +60,7 @@ export function initDb() {
   `)
 
   // Seed default theme
-  const existing = db.prepare('SELECT id FROM themes WHERE name = ?').get('dark')
+  const existing = await dbGet('SELECT id FROM themes WHERE name = ?', ['dark'])
   if (!existing) {
     const config = JSON.stringify({
       colors: { background: '#1a1a2e', primary: '#e94560', secondary: '#533483', text: '#ffffff' },
@@ -70,6 +68,31 @@ export function initDb() {
       logo: '',
       codeTheme: 'github-dark',
     })
-    db.prepare('INSERT INTO themes (id, name, config) VALUES (?, ?, ?)').run(uuid(), 'dark', config)
+    await dbRun('INSERT INTO themes (id, name, config) VALUES (?, ?, ?)', [uuid(), 'dark', config])
   }
+}
+
+export async function dbRun(sql: string, args: any[] = []) {
+  const client = getClient()
+  return client.execute({ sql, args })
+}
+
+export async function dbGet<T = any>(sql: string, args: any[] = []): Promise<T | null> {
+  const client = getClient()
+  const result = await client.execute({ sql, args })
+  return (result.rows[0] as T) ?? null
+}
+
+export async function dbAll<T = any>(sql: string, args: any[] = []): Promise<T[]> {
+  const client = getClient()
+  const result = await client.execute({ sql, args })
+  return result.rows as T[]
+}
+
+export async function dbBatch(statements: { sql: string; args?: any[] }[]) {
+  const client = getClient()
+  return client.batch(
+    statements.map(s => ({ sql: s.sql, args: s.args || [] })),
+    'write'
+  )
 }

@@ -8,3 +8,6 @@ dist/
 .DS_Store
 .superpowers/
 backups/
+.env
+.env.*
+!.env.example

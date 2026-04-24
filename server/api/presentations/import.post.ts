@@ -1,4 +1,4 @@
-import { getDb } from '../../utils/db'
+import { dbGet, dbRun, dbBatch } from '../../utils/db'
 import { v4 as uuid } from 'uuid'
 
 export default defineEventHandler(async (event) => {
@@ -8,23 +8,22 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Formato inválido. Selecione um arquivo .slidebuilder' })
   }
 
-  const db = getDb()
   const now = new Date().toISOString()
 
   // Create or reuse theme
   let themeId: string
   if (body.theme) {
-    const existing = db.prepare('SELECT id FROM themes WHERE name = ?').get(body.theme.name || 'Imported Theme') as any
+    const existing = await dbGet('SELECT id FROM themes WHERE name = ?', [body.theme.name || 'Imported Theme']) as any
     if (existing) {
       themeId = existing.id
     } else {
       themeId = uuid()
-      db.prepare('INSERT INTO themes (id, name, config) VALUES (?, ?, ?)').run(
+      await dbRun('INSERT INTO themes (id, name, config) VALUES (?, ?, ?)', [
         themeId, body.theme.name || 'Imported Theme', JSON.stringify(body.theme.config)
-      )
+      ])
     }
   } else {
-    const fallback = db.prepare('SELECT id FROM themes LIMIT 1').get() as any
+    const fallback = await dbGet('SELECT id FROM themes LIMIT 1') as any
     if (!fallback) throw createError({ statusCode: 500, message: 'No theme available' })
     themeId = fallback.id
   }
@@ -32,26 +31,26 @@ export default defineEventHandler(async (event) => {
   // Create presentation
   const presentationId = uuid()
   const title = body.presentation?.title || 'Imported Presentation'
-  db.prepare(
-    'INSERT INTO presentations (id, title, theme_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)'
-  ).run(presentationId, title, themeId, now, now)
-
-  // Create slides
-  const slides = body.slides || []
-  const insertSlide = db.prepare(
-    'INSERT INTO slides (id, presentation_id, "order", template, data, notes) VALUES (?, ?, ?, ?, ?, ?)'
+  await dbRun(
+    'INSERT INTO presentations (id, title, theme_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+    [presentationId, title, themeId, now, now]
   )
 
-  for (let i = 0; i < slides.length; i++) {
-    const s = slides[i]
-    insertSlide.run(
-      uuid(),
-      presentationId,
-      s.order ?? i,
-      s.template || 'content',
-      JSON.stringify(s.data || {}),
-      s.notes || null
-    )
+  // Create slides using batch for efficiency
+  const slides = body.slides || []
+  if (slides.length > 0) {
+    const slideStatements = slides.map((s: any, i: number) => ({
+      sql: 'INSERT INTO slides (id, presentation_id, "order", template, data, notes) VALUES (?, ?, ?, ?, ?, ?)',
+      args: [
+        uuid(),
+        presentationId,
+        s.order ?? i,
+        s.template || 'content',
+        JSON.stringify(s.data || {}),
+        s.notes || null
+      ]
+    }))
+    await dbBatch(slideStatements)
   }
 
   return {

@@ -16,8 +16,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@libsql/client": "^0.17.3",
     "@slidev/theme-default": "^0.25.0",
-    "better-sqlite3": "^12.9.0",
     "lucide-vue-next": "^1.0.0",
     "mermaid": "^11.14.0",
     "nuxt": "^4.4.2",
@@ -26,7 +26,6 @@
   "devDependencies": {
     "@nuxt/test-utils": "^4.0.2",
     "@slidev/cli": "^52.14.2",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/uuid": "^10.0.0",
     "@vue/test-utils": "^2.4.8",
     "@vueuse/core": "^14.2.1",

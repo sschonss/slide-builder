@@ -3,7 +3,12 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: false,
   modules: [],
+  runtimeConfig: {
+    tursoUrl: '',
+    tursoToken: '',
+  },
   nitro: {
+    preset: 'vercel',
     experimental: {
       asyncContext: true,
     },

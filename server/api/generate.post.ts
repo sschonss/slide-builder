@@ -1,4 +1,4 @@
-import { getDb } from '../utils/db'
+import { dbGet, dbAll } from '../utils/db'
 import { generateMarkdown } from '../utils/markdown'
 import { writeFileSync, mkdirSync, copyFileSync, existsSync } from 'fs'
 import { join } from 'path'
@@ -6,16 +6,16 @@ import type { ThemeConfig } from '../../types'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const db = getDb()
 
-  const presentation = db.prepare('SELECT * FROM presentations WHERE id = ?').get(body.presentation_id) as any
+  const presentation = await dbGet('SELECT * FROM presentations WHERE id = ?', [body.presentation_id]) as any
   if (!presentation) throw createError({ statusCode: 404, message: 'Presentation not found' })
 
-  const slides = db.prepare(
-    'SELECT * FROM slides WHERE presentation_id = ? ORDER BY "order" ASC'
-  ).all(body.presentation_id) as any[]
+  const slides = await dbAll(
+    'SELECT * FROM slides WHERE presentation_id = ? ORDER BY "order" ASC',
+    [body.presentation_id]
+  ) as any[]
 
-  const theme = db.prepare('SELECT * FROM themes WHERE id = ?').get(presentation.theme_id) as any
+  const theme = await dbGet('SELECT * FROM themes WHERE id = ?', [presentation.theme_id]) as any
   const themeConfig: ThemeConfig = theme ? JSON.parse(theme.config) : {
     colors: { background: '#1a1a2e', primary: '#e94560', secondary: '#533483', text: '#ffffff' },
     fonts: { heading: 'Inter', body: 'Inter', code: 'JetBrains Mono' },
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   writeFileSync(join(outDir, 'slides.md'), markdown, 'utf-8')
 
   // Copy assets
-  const assets = db.prepare('SELECT * FROM assets WHERE presentation_id = ?').all(body.presentation_id) as any[]
+  const assets = await dbAll('SELECT * FROM assets WHERE presentation_id = ?', [body.presentation_id]) as any[]
   if (assets.length > 0) {
     const assetsDir = join(outDir, 'assets')
     mkdirSync(assetsDir, { recursive: true })
