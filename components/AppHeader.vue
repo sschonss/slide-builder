@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogIn, LogOut, LayoutDashboard } from 'lucide-vue-next'
+import { LogIn, LogOut, LayoutDashboard, Search, BookOpen } from 'lucide-vue-next'
 
 const { user, isLoggedIn, login, logout } = useAuth()
 
@@ -20,6 +20,8 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
   <header class="app-header">
     <NuxtLink to="/" class="logo">Slide Builder</NuxtLink>
     <nav class="nav">
+      <NuxtLink to="/explore" class="nav-link"><Search :size="14" /> Explorar</NuxtLink>
+      <NuxtLink to="/docs" class="nav-link"><BookOpen :size="14" /> Docs</NuxtLink>
       <template v-if="isLoggedIn && user">
         <NuxtLink to="/dashboard" class="nav-link"><LayoutDashboard :size="14" /> Dashboard</NuxtLink>
         <div class="user-menu">
