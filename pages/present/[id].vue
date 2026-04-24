@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Slide } from '~/types'
-import { RefreshCw } from 'lucide-vue-next'
+import { RefreshCw, Maximize, Minimize } from 'lucide-vue-next'
 
 const route = useRoute()
 const presentationId = route.params.id as string
@@ -15,9 +15,24 @@ const theme = computed(() => presentation.value?.theme?.config)
 const { remoteIndex, remoteZoom, init, sendIndex, destroy } = usePresenterSync(presentationId, 'audience')
 
 const zoomStyle = computed(() => ({
-  transform: `scale(${remoteZoom.value})`,
-  transformOrigin: 'center center',
+  zoom: remoteZoom.value,
 }))
+
+const isFullscreen = ref(false)
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen()
+  } else {
+    document.exitFullscreen()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('fullscreenchange', () => {
+    isFullscreen.value = !!document.fullscreenElement
+  })
+})
 
 function goTo(index: number) {
   if (index < 0 || index >= slides.value.length) return
@@ -83,6 +98,9 @@ onUnmounted(() => {
     <div class="slide-counter">{{ currentSlideIndex + 1 }} / {{ slides.length }}</div>
     <button @click.stop="forceSync" class="sync-btn" :class="{ spinning: syncing }" title="Sincronizar">
       <RefreshCw :size="14" />
+    </button>
+    <button @click.stop="toggleFullscreen" class="fullscreen-btn" :title="isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'">
+      <component :is="isFullscreen ? Minimize : Maximize" :size="14" />
     </button>
   </div>
 </template>
@@ -237,5 +255,22 @@ onUnmounted(() => {
 }
 .sync-btn.spinning :deep(svg) {
   animation: spin 1s linear infinite;
+}
+.fullscreen-btn {
+  position: fixed;
+  bottom: 16px;
+  left: 60px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+}
+.fullscreen-btn:hover {
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>

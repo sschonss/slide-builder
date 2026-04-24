@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Slide } from '~/types'
-import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote, RefreshCw, Cast, Link, Check, ArrowLeft, ShieldAlert, ZoomIn, ZoomOut } from 'lucide-vue-next'
+import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote, RefreshCw, Cast, Link, Check, ArrowLeft, ShieldAlert, Minus, Plus } from 'lucide-vue-next'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -214,9 +214,9 @@ onUnmounted(() => {
       </div>
       <div class="action-controls">
         <div class="zoom-controls">
-          <button @click="zoomOut" class="ctrl-btn" :disabled="zoomLevel <= 0.5" title="Diminuir zoom"><ZoomOut :size="16" /></button>
+          <button @click="zoomOut" class="ctrl-btn" :disabled="zoomLevel <= 0.5" title="Diminuir zoom"><Minus :size="16" /></button>
           <button @click="resetZoom" class="zoom-label" :title="'Zoom: ' + zoomPercent + '%'">{{ zoomPercent }}%</button>
-          <button @click="zoomIn" class="ctrl-btn" :disabled="zoomLevel >= 3" title="Aumentar zoom"><ZoomIn :size="16" /></button>
+          <button @click="zoomIn" class="ctrl-btn" :disabled="zoomLevel >= 3" title="Aumentar zoom"><Plus :size="16" /></button>
         </div>
         <button @click="toggleTimer" class="ctrl-btn"><component :is="timerRunning ? Pause : Play" :size="16" /></button>
         <button @click="resetTimer" class="ctrl-btn"><RotateCcw :size="16" /></button>
