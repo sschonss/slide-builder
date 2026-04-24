@@ -1,11 +1,35 @@
 <script setup lang="ts">
 import type { Slide, ThemeConfig, CoverData, SectionData, ContentData, DiagramData, CodeData, ComparisonData } from '~/types'
+import mermaid from 'mermaid'
 
 const props = defineProps<{ slide: Slide; theme?: ThemeConfig }>()
 
 const bg = computed(() => props.theme?.colors?.background || '#1a1a2e')
 const primary = computed(() => props.theme?.colors?.primary || '#e94560')
 const textColor = computed(() => props.theme?.colors?.text || '#ffffff')
+
+const mermaidSvg = ref('')
+const mermaidContainer = ref<HTMLDivElement | null>(null)
+
+mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' })
+
+const mermaidCode = computed(() => {
+  if (props.slide.template === 'diagram' && (props.slide.data as DiagramData).diagram_type === 'mermaid') {
+    return (props.slide.data as DiagramData).mermaid_code || ''
+  }
+  return ''
+})
+
+watch(mermaidCode, async (code) => {
+  if (!code.trim()) { mermaidSvg.value = ''; return }
+  try {
+    const id = `mermaid-${Date.now()}`
+    const { svg } = await mermaid.render(id, code)
+    mermaidSvg.value = svg
+  } catch {
+    mermaidSvg.value = ''
+  }
+}, { immediate: true })
 </script>
 
 <template>
@@ -45,7 +69,8 @@ const textColor = computed(() => props.theme?.colors?.text || '#ffffff')
           <h1>{{ (slide.data as DiagramData).title }}</h1>
           <div class="diagram-placeholder">
             <template v-if="(slide.data as DiagramData).diagram_type === 'mermaid'">
-              <pre class="mermaid-preview">{{ (slide.data as DiagramData).mermaid_code }}</pre>
+              <div v-if="mermaidSvg" class="mermaid-rendered" v-html="mermaidSvg" />
+              <pre v-else class="mermaid-preview">{{ (slide.data as DiagramData).mermaid_code || 'graph TD\n  A-->B' }}</pre>
             </template>
             <template v-else-if="(slide.data as DiagramData).diagram_type === 'excalidraw'">
               <div v-if="(slide.data as DiagramData).excalidraw_svg" class="excalidraw-preview" v-html="(slide.data as DiagramData).excalidraw_svg" />
@@ -106,6 +131,8 @@ h2 { font-size: 18px; opacity: 0.7; }
 .diagram-slide { text-align: center; width: 100%; }
 .diagram-placeholder { margin-top: 16px; }
 .mermaid-preview { text-align: left; font-size: 10px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; max-height: 200px; overflow: auto; }
+.mermaid-rendered { max-height: 280px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.mermaid-rendered :deep(svg) { max-width: 100%; max-height: 280px; }
 .excalidraw-preview { max-height: 200px; overflow: hidden; }
 .excalidraw-preview :deep(svg) { width: 100%; height: auto; max-height: 200px; }
 .placeholder-text { font-size: 40px; }
