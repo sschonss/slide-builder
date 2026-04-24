@@ -50,7 +50,7 @@ async function deletePresentation(id: string) {
           <h3>{{ p.title }}</h3>
           <p class="meta">{{ p.slide_count || 0 }} slides · {{ new Date(p.updated_at).toLocaleDateString('pt-BR') }}</p>
         </NuxtLink>
-        <button class="btn-delete" @click.stop="deletePresentation(p.id)"><Trash2 :size="14" /></button>
+        <button class="btn-delete" @click.stop="deletePresentation(p.id)"><Trash2 :size="16" /></button>
       </div>
     </div>
 
@@ -74,8 +74,8 @@ async function deletePresentation(id: string) {
 .card-body { flex: 1; padding: 20px; }
 .card-body h3 { font-size: 16px; margin-bottom: 4px; }
 .meta { font-size: 12px; color: #8b949e; }
-.btn-delete { background: none; border: none; padding: 12px; cursor: pointer; font-size: 16px; opacity: 0.4; }
-.btn-delete:hover { opacity: 1; }
+.btn-delete { background: none; border: none; padding: 12px; cursor: pointer; color: #484f58; display: flex; align-items: center; }
+.btn-delete:hover { color: #f85149; }
 .empty { text-align: center; padding: 80px 0; color: #8b949e; }
 .empty .btn-primary { margin-top: 16px; }
 </style>
