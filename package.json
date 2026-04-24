@@ -30,6 +30,7 @@
     "@nuxt/test-utils": "^4.0.2",
     "@slidev/cli": "^52.14.2",
     "@types/uuid": "^10.0.0",
+    "@vite-pwa/nuxt": "^1.1.1",
     "@vue/test-utils": "^2.4.8",
     "@vueuse/core": "^14.2.1",
     "happy-dom": "^20.9.0",

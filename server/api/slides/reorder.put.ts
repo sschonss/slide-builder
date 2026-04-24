@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   await dbBatch(body.slides.map((s: any) => ({
     sql: 'UPDATE slides SET "order" = ? WHERE id = ?',
     args: [s.order, s.id]
-  })))
+  })), 'write')
 
   await saveBackup(slide.presentation_id)
   await logChange(slide.presentation_id, 'reorder', `Reordenou ${body.slides.length} slides`)

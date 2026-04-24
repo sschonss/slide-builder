@@ -18,7 +18,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 
 <template>
   <header class="app-header">
-    <NuxtLink to="/" class="logo">Slide Builder</NuxtLink>
+    <NuxtLink to="/" class="logo"><AppLogo :size="24" /> Slide Builder</NuxtLink>
     <nav class="nav">
       <NuxtLink to="/explore" class="nav-link"><Search :size="14" /> Explorar</NuxtLink>
       <NuxtLink to="/docs" class="nav-link"><BookOpen :size="14" /> Docs</NuxtLink>
@@ -48,7 +48,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 
 <style scoped>
 .app-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: #010409; border-bottom: 1px solid #21262d; }
-.logo { font-size: 16px; font-weight: 700; color: #e6edf3; }
+.logo { font-size: 16px; font-weight: 700; color: #e6edf3; display: flex; align-items: center; gap: 8px; }
 .nav { display: flex; align-items: center; gap: 12px; }
 .nav-link { font-size: 13px; color: #8b949e; display: flex; align-items: center; gap: 5px; }
 .nav-link:hover { color: #e6edf3; }

@@ -1,10 +1,16 @@
-import { dbGet, dbAll } from '../../utils/db'
+import { dbGet, dbAll, dbBatch } from '../../utils/db'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const session = await getUserSession(event)
 
-  const presentation = await dbGet('SELECT * FROM presentations WHERE id = ?', [id]) as any
+  // Single batch: presentation + slides + theme in one round-trip
+  const results = await dbBatch([
+    { sql: 'SELECT * FROM presentations WHERE id = ?', args: [id] },
+    { sql: 'SELECT * FROM slides WHERE presentation_id = ? ORDER BY "order" ASC', args: [id] },
+  ])
+
+  const presentation = results[0].rows[0] as any
   if (!presentation) throw createError({ statusCode: 404, message: 'Presentation not found' })
 
   const isOwner = session?.user?.id && session.user.id === presentation.user_id
@@ -12,11 +18,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Presentation not found' })
   }
 
-  const slides = await dbAll(
-    'SELECT * FROM slides WHERE presentation_id = ? ORDER BY "order" ASC',
-    [id]
-  ) as any[]
+  const slides = results[1].rows as any[]
 
+  // Theme needs presentation.theme_id, so separate query
   const theme = await dbGet('SELECT * FROM themes WHERE id = ?', [presentation.theme_id]) as any
 
   return {

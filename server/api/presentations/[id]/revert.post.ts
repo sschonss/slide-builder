@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
     }] : [])
   ]
 
-  await dbBatch(statements)
+  await dbBatch(statements, 'write')
 
   await logChange(presentationId!, 'revert', `Reverteu para ${hash}`)
 

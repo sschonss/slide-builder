@@ -11,6 +11,7 @@ watch(isLoggedIn, (value) => {
 <template>
   <div class="landing">
     <div class="hero">
+      <AppLogo :size="64" />
       <h1>Slide Builder</h1>
       <p class="subtitle">Crie apresentações profissionais com facilidade.</p>
       <button v-if="!isLoggedIn" class="btn-login" @click="login">

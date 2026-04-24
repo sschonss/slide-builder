@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
         s.notes || null
       ]
     }))
-    await dbBatch(slideStatements)
+    await dbBatch(slideStatements, 'write')
   }
 
   return {

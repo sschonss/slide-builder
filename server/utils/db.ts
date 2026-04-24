@@ -103,11 +103,11 @@ export async function dbAll<T = any>(sql: string, args: any[] = []): Promise<T[]
   return result.rows as T[]
 }
 
-export async function dbBatch(statements: { sql: string; args?: any[] }[]) {
+export async function dbBatch(statements: { sql: string; args?: any[] }[], mode: 'write' | 'read' = 'read') {
   await ensureDb()
   const client = getClient()
   return client.batch(
     statements.map(s => ({ sql: s.sql, args: s.args || [] })),
-    'write'
+    mode
   )
 }
