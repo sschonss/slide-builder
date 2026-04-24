@@ -49,6 +49,10 @@ const textColor = computed(() => props.theme?.colors?.text || '#ffffff')
             <template v-if="(slide.data as DiagramData).diagram_type === 'mermaid'">
               <pre class="mermaid-preview">{{ (slide.data as DiagramData).mermaid_code }}</pre>
             </template>
+            <template v-else-if="(slide.data as DiagramData).diagram_type === 'excalidraw'">
+              <div v-if="(slide.data as DiagramData).excalidraw_svg" class="excalidraw-preview" v-html="(slide.data as DiagramData).excalidraw_svg" />
+              <span v-else class="placeholder-text">🎨 Excalidraw</span>
+            </template>
             <template v-else>
               <span class="placeholder-text">{{ (slide.data as DiagramData).diagram_type === 'image' ? '🖼 Imagem' : '🔗 Embed' }}</span>
             </template>
@@ -105,6 +109,8 @@ h2 { font-size: 18px; opacity: 0.7; }
 .diagram-slide { text-align: center; width: 100%; }
 .diagram-placeholder { margin-top: 16px; }
 .mermaid-preview { text-align: left; font-size: 10px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; max-height: 200px; overflow: auto; }
+.excalidraw-preview { max-height: 200px; overflow: hidden; }
+.excalidraw-preview :deep(svg) { width: 100%; height: auto; max-height: 200px; }
 .placeholder-text { font-size: 40px; }
 
 .code-slide { text-align: left; width: 100%; }
