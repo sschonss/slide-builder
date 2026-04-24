@@ -80,6 +80,7 @@ watch(mermaidCode, async (code) => {
               <span class="placeholder-text">{{ (slide.data as DiagramData).diagram_type === 'image' ? '🖼 Imagem' : '🔗 Embed' }}</span>
             </template>
           </div>
+          <p v-if="(slide.data as DiagramData).caption" class="caption">{{ (slide.data as DiagramData).caption }}</p>
         </div>
       </template>
 
@@ -136,6 +137,8 @@ h2 { font-size: 18px; opacity: 0.7; }
 .excalidraw-preview { max-height: 200px; overflow: hidden; }
 .excalidraw-preview :deep(svg) { width: 100%; height: auto; max-height: 200px; }
 .placeholder-text { font-size: 40px; }
+
+.caption { font-size: 11px; opacity: 0.5; margin-top: 8px; text-align: center; }
 
 .code-slide { text-align: left; width: 100%; }
 .code-block { background: #0d1117; padding: 16px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; overflow: auto; max-height: 250px; margin-top: 12px; }
