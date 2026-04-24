@@ -17,7 +17,6 @@ const textColor = computed(() => props.theme?.colors?.text || '#ffffff')
           <h1>{{ (slide.data as CoverData).title }}</h1>
           <h2 v-if="(slide.data as CoverData).subtitle">{{ (slide.data as CoverData).subtitle }}</h2>
           <p class="author" v-if="(slide.data as CoverData).author">{{ (slide.data as CoverData).author }}</p>
-          <div class="accent-bar" :style="{ background: primary }" />
         </div>
       </template>
 
@@ -26,7 +25,6 @@ const textColor = computed(() => props.theme?.colors?.text || '#ffffff')
         <div class="section-slide">
           <span class="section-num" v-if="(slide.data as SectionData).section_number">{{ (slide.data as SectionData).section_number }}</span>
           <h1>{{ (slide.data as SectionData).title }}</h1>
-          <div class="accent-bar" :style="{ background: primary }" />
         </div>
       </template>
 
@@ -94,7 +92,6 @@ const textColor = computed(() => props.theme?.colors?.text || '#ffffff')
 .slide { width: 100%; height: 100%; border-radius: 8px; padding: 40px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
 h1 { font-size: 28px; margin-bottom: 8px; }
 h2 { font-size: 18px; opacity: 0.7; }
-.accent-bar { width: 40px; height: 3px; margin-top: 12px; border-radius: 2px; }
 
 .cover { text-align: center; }
 .author { font-size: 13px; opacity: 0.5; margin-top: 8px; }
