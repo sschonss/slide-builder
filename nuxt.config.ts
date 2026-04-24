@@ -2,10 +2,19 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: true },
   ssr: false,
-  modules: [],
+  modules: ['nuxt-auth-utils'],
   runtimeConfig: {
     tursoUrl: '',
     tursoToken: '',
+    session: {
+      maxAge: 60 * 60 * 24 * 7,
+    },
+    oauth: {
+      github: {
+        clientId: '',
+        clientSecret: '',
+      },
+    },
   },
   nitro: {
     preset: 'vercel',

@@ -1,6 +1,3 @@
-import { initDb } from '../utils/db'
-
-export default defineNitroPlugin(async () => {
-  await initDb()
-  console.log('[slide-builder] Database initialized')
+export default defineNitroPlugin(() => {
+  console.log('[slide-builder] Plugin loaded — DB will initialize lazily on first request')
 })

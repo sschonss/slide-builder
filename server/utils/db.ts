@@ -1,95 +1,110 @@
-import { createClient, type Client } from '@libsql/client'
+import { createClient as createHttpClient, type Client } from '@libsql/client/http'
 import { v4 as uuid } from 'uuid'
 
 let _client: Client | null = null
+let _dbReady = false
+let _initPromise: Promise<void> | null = null
 
 export function getClient(): Client {
   if (_client) return _client
   const config = useRuntimeConfig()
-  _client = createClient({
-    url: config.tursoUrl || 'file:data/database.sqlite',
+  const url = config.tursoUrl || ''
+  if (!url) {
+    throw new Error('[slide-builder] NUXT_TURSO_URL is not set')
+  }
+  // Convert libsql:// to https:// for HTTP client
+  const httpUrl = url.replace(/^libsql:\/\//, 'https://')
+  _client = createHttpClient({
+    url: httpUrl,
     authToken: config.tursoToken || undefined,
   })
   return _client
 }
 
-export async function initDb() {
-  const client = getClient()
+async function ensureDb() {
+  if (_dbReady) return
+  if (_initPromise) {
+    await _initPromise
+    return
+  }
+  _initPromise = _initDbInternal()
+  await _initPromise
+}
 
-  await client.executeMultiple(`
-    CREATE TABLE IF NOT EXISTS themes (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL UNIQUE,
-      config TEXT NOT NULL DEFAULT '{}'
-    );
+async function _initDbInternal() {
+  try {
+    const client = getClient()
+    console.log('[slide-builder] Running schema migrations...')
 
-    CREATE TABLE IF NOT EXISTS presentations (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      theme_id TEXT NOT NULL REFERENCES themes(id),
-      created_at DATETIME NOT NULL DEFAULT (datetime('now')),
-      updated_at DATETIME NOT NULL DEFAULT (datetime('now'))
-    );
+    await client.batch([
+      { sql: `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE, name TEXT NOT NULL, avatar_url TEXT NOT NULL DEFAULT '', created_at DATETIME NOT NULL DEFAULT (datetime('now')), updated_at DATETIME NOT NULL DEFAULT (datetime('now')))`, args: [] },
+      { sql: `CREATE TABLE IF NOT EXISTS themes (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, config TEXT NOT NULL DEFAULT '{}')`, args: [] },
+      { sql: `CREATE TABLE IF NOT EXISTS presentations (id TEXT PRIMARY KEY, title TEXT NOT NULL, theme_id TEXT NOT NULL REFERENCES themes(id), created_at DATETIME NOT NULL DEFAULT (datetime('now')), updated_at DATETIME NOT NULL DEFAULT (datetime('now')))`, args: [] },
+      { sql: `CREATE TABLE IF NOT EXISTS slides (id TEXT PRIMARY KEY, presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE, "order" INTEGER NOT NULL DEFAULT 0, template TEXT NOT NULL CHECK(template IN ('cover','section','content','diagram','code','comparison')), data TEXT NOT NULL DEFAULT '{}', notes TEXT)`, args: [] },
+      { sql: `CREATE TABLE IF NOT EXISTS assets (id TEXT PRIMARY KEY, presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE, filename TEXT NOT NULL, path TEXT NOT NULL, type TEXT NOT NULL CHECK(type IN ('image','video','logo')))`, args: [] },
+      { sql: `CREATE TABLE IF NOT EXISTS change_log (id INTEGER PRIMARY KEY AUTOINCREMENT, presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE, action TEXT NOT NULL, description TEXT NOT NULL, slide_hash TEXT, snapshot TEXT, created_at DATETIME NOT NULL DEFAULT (datetime('now')))`, args: [] },
+    ], 'write')
 
-    CREATE TABLE IF NOT EXISTS slides (
-      id TEXT PRIMARY KEY,
-      presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE,
-      "order" INTEGER NOT NULL DEFAULT 0,
-      template TEXT NOT NULL CHECK(template IN ('cover','section','content','diagram','code','comparison')),
-      data TEXT NOT NULL DEFAULT '{}',
-      notes TEXT
-    );
+    // ALTER TABLE migrations — safe to fail if columns already exist
+    for (const sql of [
+      `ALTER TABLE presentations ADD COLUMN user_id TEXT REFERENCES users(id)`,
+      `ALTER TABLE presentations ADD COLUMN visibility TEXT NOT NULL DEFAULT 'private' CHECK(visibility IN ('public', 'private'))`,
+    ]) {
+      try {
+        await client.execute({ sql, args: [] })
+      } catch {
+        // Column already exists — skip
+      }
+    }
 
-    CREATE TABLE IF NOT EXISTS assets (
-      id TEXT PRIMARY KEY,
-      presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE,
-      filename TEXT NOT NULL,
-      path TEXT NOT NULL,
-      type TEXT NOT NULL CHECK(type IN ('image','video','logo'))
-    );
+    console.log('[slide-builder] Schema ready, seeding default theme...')
 
-    CREATE TABLE IF NOT EXISTS change_log (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE,
-      action TEXT NOT NULL,
-      description TEXT NOT NULL,
-      slide_hash TEXT,
-      snapshot TEXT,
-      created_at DATETIME NOT NULL DEFAULT (datetime('now'))
-    );
-  `)
+    const existing = await client.execute({ sql: 'SELECT id FROM themes WHERE name = ?', args: ['dark'] })
+    if (existing.rows.length === 0) {
+      const themeConfig = JSON.stringify({
+        colors: { background: '#1a1a2e', primary: '#e94560', secondary: '#533483', text: '#ffffff' },
+        fonts: { heading: 'Inter', body: 'Inter', code: 'JetBrains Mono' },
+        logo: '',
+        codeTheme: 'github-dark',
+      })
+      await client.execute({ sql: 'INSERT INTO themes (id, name, config) VALUES (?, ?, ?)', args: [uuid(), 'dark', themeConfig] })
+    }
 
-  // Seed default theme
-  const existing = await dbGet('SELECT id FROM themes WHERE name = ?', ['dark'])
-  if (!existing) {
-    const config = JSON.stringify({
-      colors: { background: '#1a1a2e', primary: '#e94560', secondary: '#533483', text: '#ffffff' },
-      fonts: { heading: 'Inter', body: 'Inter', code: 'JetBrains Mono' },
-      logo: '',
-      codeTheme: 'github-dark',
-    })
-    await dbRun('INSERT INTO themes (id, name, config) VALUES (?, ?, ?)', [uuid(), 'dark', config])
+    _dbReady = true
+    console.log('[slide-builder] Database initialized successfully')
+  } catch (err) {
+    _initPromise = null
+    console.error('[slide-builder] Database init failed:', err)
+    throw err
   }
 }
 
+export async function initDb() {
+  await ensureDb()
+}
+
 export async function dbRun(sql: string, args: any[] = []) {
+  await ensureDb()
   const client = getClient()
   return client.execute({ sql, args })
 }
 
 export async function dbGet<T = any>(sql: string, args: any[] = []): Promise<T | null> {
+  await ensureDb()
   const client = getClient()
   const result = await client.execute({ sql, args })
   return (result.rows[0] as T) ?? null
 }
 
 export async function dbAll<T = any>(sql: string, args: any[] = []): Promise<T[]> {
+  await ensureDb()
   const client = getClient()
   const result = await client.execute({ sql, args })
   return result.rows as T[]
 }
 
 export async function dbBatch(statements: { sql: string; args?: any[] }[]) {
+  await ensureDb()
   const client = getClient()
   return client.batch(
     statements.map(s => ({ sql: s.sql, args: s.args || [] })),
