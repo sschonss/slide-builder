@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { LogIn, LogOut, LayoutDashboard, Search, BookOpen } from 'lucide-vue-next'
+import { LogIn, LogOut, LayoutDashboard, Search, BookOpen, RefreshCw } from 'lucide-vue-next'
 
 const { user, isLoggedIn, login, logout } = useAuth()
 
 const showMenu = ref(false)
+const updating = ref(false)
+const isPwa = ref(false)
 
 function toggleMenu() { showMenu.value = !showMenu.value }
 
@@ -12,7 +14,34 @@ function handleClickOutside(e: Event) {
   if (el && !el.contains(e.target as Node)) showMenu.value = false
 }
 
-onMounted(() => document.addEventListener('click', handleClickOutside))
+async function updateApp() {
+  updating.value = true
+  try {
+    if ('serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.getRegistration()
+      if (registration) {
+        await registration.update()
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+        }
+      }
+    }
+    // Clear caches
+    if ('caches' in window) {
+      const keys = await caches.keys()
+      await Promise.all(keys.map(k => caches.delete(k)))
+    }
+    window.location.reload()
+  } catch {
+    window.location.reload()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+  isPwa.value = window.matchMedia('(display-mode: standalone)').matches
+    || (window.navigator as any).standalone === true
+})
 onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
@@ -22,6 +51,9 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
     <nav class="nav">
       <NuxtLink to="/explore" class="nav-link"><Search :size="14" /> Explorar</NuxtLink>
       <NuxtLink to="/docs" class="nav-link"><BookOpen :size="14" /> Docs</NuxtLink>
+      <button v-if="isPwa" @click="updateApp" class="btn-update" :class="{ spinning: updating }" title="Atualizar App">
+        <RefreshCw :size="14" /> Atualizar
+      </button>
       <template v-if="isLoggedIn && user">
         <NuxtLink to="/dashboard" class="nav-link"><LayoutDashboard :size="14" /> Dashboard</NuxtLink>
         <div class="user-menu">
@@ -64,4 +96,9 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 .menu-item:hover { background: rgba(255,255,255,0.08); }
 .btn-login { background: #238636; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; }
 .btn-login:hover { background: #2ea043; }
+.btn-update { background: none; border: 1px solid #30363d; color: #8b949e; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 5px; transition: all 0.15s; }
+.btn-update:hover { color: #e6edf3; border-color: #58a6ff; }
+.btn-update.spinning { color: #58a6ff; pointer-events: none; }
+.btn-update.spinning :deep(svg) { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>
