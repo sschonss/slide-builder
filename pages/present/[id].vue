@@ -117,60 +117,60 @@ onUnmounted(() => {
 .slide-container :deep(.slide) {
   border-radius: 0;
   box-shadow: none;
-  padding: 60px 80px;
+  padding: 4vh 5vw;
 }
 
 .slide-container :deep(h1) {
-  font-size: 56px;
-  margin-bottom: 16px;
+  font-size: 3.5vw;
+  margin-bottom: 0.8vw;
 }
 
 .slide-container :deep(h2) {
-  font-size: 36px;
+  font-size: 2.25vw;
 }
 
 .slide-container :deep(.author) {
-  font-size: 24px;
+  font-size: 1.5vw;
 }
 
 .slide-container :deep(.content-slide ul) {
-  font-size: 32px;
+  font-size: 2vw;
   line-height: 2;
 }
 
 .slide-container :deep(.content-slide blockquote) {
-  font-size: 28px;
+  font-size: 1.75vw;
 }
 
 .slide-container :deep(.section-num) {
-  font-size: 20px;
+  font-size: 1.25vw;
 }
 
 .slide-container :deep(.code-block) {
-  font-size: 22px;
+  font-size: 1.4vw;
   max-height: none;
-  padding: 32px;
+  padding: 2vw;
 }
 
 .slide-container :deep(.note) {
-  font-size: 20px;
+  font-size: 1.25vw;
 }
 
 .slide-container :deep(.columns) {
-  gap: 40px;
+  gap: 2.5vw;
 }
 
 .slide-container :deep(.col) {
-  padding: 32px;
+  padding: 2vw;
 }
 
 .slide-container :deep(.col h3) {
-  font-size: 28px;
-  margin-bottom: 16px;
+  font-size: 1.75vw;
+  margin-bottom: 0.8vw;
 }
 
 .slide-container :deep(.col ul) {
-  font-size: 24px;
+  font-size: 1.5vw;
   line-height: 2;
 }
 
@@ -180,6 +180,34 @@ onUnmounted(() => {
 
 .slide-container :deep(.mermaid-rendered svg) {
   max-height: 70vh;
+  max-width: 80vw;
+}
+
+.slide-container :deep(.excalidraw-preview) {
+  max-height: 70vh;
+}
+
+.slide-container :deep(.excalidraw-preview svg) {
+  max-height: 70vh;
+  max-width: 80vw;
+}
+
+.slide-container :deep(.placeholder-text) {
+  font-size: 3vw;
+}
+
+.slide-container :deep(.caption) {
+  font-size: 1.1vw;
+}
+
+.slide-container :deep(.diagram-placeholder) {
+  margin-top: 1.5vw;
+}
+
+.slide-container :deep(.mermaid-preview) {
+  font-size: 1.2vw;
+  max-height: 60vh;
+  padding: 2vw;
 }
 
 .slide-counter {
