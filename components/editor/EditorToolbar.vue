@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{ title: string; slideIndex: number; totalSlides: number }>()
+const props = defineProps<{ title: string; slideIndex: number; totalSlides: number; presentationId: string }>()
 const emit = defineEmits<{
   (e: 'present'): void
   (e: 'export'): void
@@ -13,6 +13,17 @@ async function handleExport() {
   exporting.value = true
   emit('export')
   setTimeout(() => { exporting.value = false }, 3000)
+}
+
+async function downloadBundle() {
+  const res = await fetch(`/api/export-bundle?id=${props.presentationId}`)
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${props.title.replace(/[^a-zA-Z0-9-_ ]/g, '')}.slidebuilder`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 </script>
 
@@ -30,6 +41,7 @@ async function handleExport() {
     <div class="toolbar-right">
       <button class="btn" @click="emit('present')">▶ Apresentar</button>
       <button class="btn" @click="handleExport" :disabled="exporting">📄 {{ exporting ? 'Exportando...' : 'PDF' }}</button>
+      <button class="btn" @click="downloadBundle">💾 Salvar</button>
       <button class="btn" @click="emit('openTheme')">🎨 Tema</button>
     </div>
   </div>
