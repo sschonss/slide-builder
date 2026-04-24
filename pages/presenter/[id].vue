@@ -2,7 +2,8 @@
 import type { Slide } from '~/types'
 import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote } from 'lucide-vue-next'
 
-definePageMeta({ middleware: 'auth' })
+// No auth middleware — presenter page checks visibility via API
+// Private presentations return 403 for non-owners (handled by server)
 
 const route = useRoute()
 const presentationId = route.params.id as string
