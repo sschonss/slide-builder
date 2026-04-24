@@ -1,5 +1,6 @@
 <template>
   <div>
+    <SavingIndicator />
     <AppHeader />
     <NuxtPage />
   </div>

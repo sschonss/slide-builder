@@ -5,6 +5,7 @@ definePageMeta({ middleware: 'auth' })
 
 const route = useRoute()
 const presentationId = route.params.id as string
+const { withSaving } = useSaving()
 
 const { data: presentation, refresh } = useFetch(`/api/presentations/${presentationId}`)
 const currentSlideIndex = ref(0)
@@ -23,41 +24,61 @@ function selectSlide(index: number) {
 }
 
 async function addSlide(template: string) {
-  await $fetch('/api/slides', {
-    method: 'POST',
-    body: { presentation_id: presentationId, template },
+  await withSaving(async () => {
+    await $fetch('/api/slides', {
+      method: 'POST',
+      body: { presentation_id: presentationId, template },
+    })
+    await refresh()
+    currentSlideIndex.value = slides.value.length - 1
+    await regenerateMarkdown()
   })
-  await refresh()
-  currentSlideIndex.value = slides.value.length - 1
-  await regenerateMarkdown()
 }
 
 async function updateSlide(slideId: string, updates: Partial<Slide>) {
-  await $fetch(`/api/slides/${slideId}`, { method: 'PUT', body: updates })
-  await refresh()
-  await regenerateMarkdown()
+  await withSaving(async () => {
+    await $fetch(`/api/slides/${slideId}`, { method: 'PUT', body: updates })
+    await refresh()
+    await regenerateMarkdown()
+  })
 }
 
 async function deleteSlide(slideId: string) {
   if (slides.value.length <= 1) return
-  await $fetch(`/api/slides/${slideId}`, { method: 'DELETE' })
-  if (currentSlideIndex.value >= slides.value.length - 1) {
-    currentSlideIndex.value = Math.max(0, currentSlideIndex.value - 1)
-  }
-  await refresh()
-  await regenerateMarkdown()
+  await withSaving(async () => {
+    await $fetch(`/api/slides/${slideId}`, { method: 'DELETE' })
+    if (currentSlideIndex.value >= slides.value.length - 1) {
+      currentSlideIndex.value = Math.max(0, currentSlideIndex.value - 1)
+    }
+    await refresh()
+    await regenerateMarkdown()
+  })
 }
 
 async function reorderSlides(newOrder: { id: string; order: number }[]) {
-  await $fetch('/api/slides/reorder', { method: 'PUT', body: { slides: newOrder } })
-  await refresh()
-  await regenerateMarkdown()
+  await withSaving(async () => {
+    await $fetch('/api/slides/reorder', { method: 'PUT', body: { slides: newOrder } })
+    await refresh()
+    await regenerateMarkdown()
+  })
 }
 
 async function regenerateMarkdown() {
   try {
     await $fetch('/api/generate', { method: 'POST', body: { presentation_id: presentationId } })
   } catch {}
+}
+
+async function handleSave() {
+  if (!currentSlide.value) return
+  await withSaving(async () => {
+    await $fetch(`/api/slides/${currentSlide.value.id}`, {
+      method: 'PUT',
+      body: { data: currentSlide.value.data, notes: currentSlide.value.notes, template: currentSlide.value.template },
+    })
+    await regenerateMarkdown()
+    await refresh()
+  })
 }
 
 function handlePresent() {
@@ -70,13 +91,15 @@ function handlePresent() {
 }
 
 async function handleExport() {
-  await $fetch('/api/generate', { method: 'POST', body: { presentation_id: presentationId } })
-  try {
-    await $fetch('/api/export', { method: 'POST', body: { presentation_id: presentationId } })
-    alert('PDF exportado com sucesso!')
-  } catch (err: any) {
-    alert('Erro ao exportar: ' + err.message)
-  }
+  await withSaving(async () => {
+    await $fetch('/api/generate', { method: 'POST', body: { presentation_id: presentationId } })
+    try {
+      await $fetch('/api/export', { method: 'POST', body: { presentation_id: presentationId } })
+      alert('PDF exportado com sucesso!')
+    } catch (err: any) {
+      alert('Erro ao exportar: ' + err.message)
+    }
+  })
 }
 </script>
 
@@ -88,6 +111,7 @@ async function handleExport() {
       :total-slides="slides.length"
       :presentation-id="presentationId"
       @present="handlePresent"
+      @save="handleSave"
       @open-theme="showThemeEditor = true"
       @navigate="navigateSlide"
     />
