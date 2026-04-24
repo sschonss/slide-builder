@@ -1,6 +1,7 @@
 import { dbGet, dbRun } from '../../utils/db'
 import { saveBackup } from '../../utils/backup'
 import { logChange } from '../../utils/changelog'
+import { requireOwnership } from '../../utils/ownership'
 import { v4 as uuid } from 'uuid'
 
 const DEFAULT_DATA: Record<string, object> = {
@@ -14,6 +15,7 @@ const DEFAULT_DATA: Record<string, object> = {
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
+  await requireOwnership(event, body.presentation_id)
 
   const last = await dbGet(
     'SELECT MAX("order") as max_order FROM slides WHERE presentation_id = ?',

@@ -1,9 +1,11 @@
 import { dbGet, dbRun } from '../../utils/db'
+import { requireAuth } from '../../utils/ownership'
 import { v4 as uuid } from 'uuid'
 import { writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
 export default defineEventHandler(async (event) => {
+  await requireAuth(event)
   const body = await readBody(event)
 
   if (!body.presentation_id || !body.slide_id || !body.svg) {

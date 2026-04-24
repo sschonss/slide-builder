@@ -1,7 +1,9 @@
 import { dbGet, dbRun, dbBatch } from '../../utils/db'
+import { requireAuth } from '../../utils/ownership'
 import { v4 as uuid } from 'uuid'
 
 export default defineEventHandler(async (event) => {
+  const user = await requireAuth(event)
   const body = await readBody(event)
 
   if (body.format !== 'slidebuilder' || !body.version) {
@@ -32,8 +34,8 @@ export default defineEventHandler(async (event) => {
   const presentationId = uuid()
   const title = body.presentation?.title || 'Imported Presentation'
   await dbRun(
-    'INSERT INTO presentations (id, title, theme_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-    [presentationId, title, themeId, now, now]
+    'INSERT INTO presentations (id, title, theme_id, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+    [presentationId, title, themeId, user.id, now, now]
   )
 
   // Create slides using batch for efficiency

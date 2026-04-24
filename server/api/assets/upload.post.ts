@@ -1,9 +1,11 @@
 import { dbRun } from '../../utils/db'
+import { requireAuth } from '../../utils/ownership'
 import { v4 as uuid } from 'uuid'
 import { writeFileSync, mkdirSync } from 'fs'
 import { join, extname } from 'path'
 
 export default defineEventHandler(async (event) => {
+  await requireAuth(event)
   const form = await readMultipartFormData(event)
   if (!form || form.length === 0) {
     throw createError({ statusCode: 400, message: 'No file uploaded' })

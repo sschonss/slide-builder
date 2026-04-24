@@ -1,6 +1,7 @@
 import { dbGet, dbRun } from '../../utils/db'
 import { saveBackup } from '../../utils/backup'
 import { logChange } from '../../utils/changelog'
+import { requireOwnership } from '../../utils/ownership'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -20,6 +21,7 @@ export default defineEventHandler(async (event) => {
 
   const slide = await dbGet('SELECT presentation_id, "order", template FROM slides WHERE id = ?', [id]) as any
   if (slide) {
+    await requireOwnership(event, slide.presentation_id)
     await dbRun("UPDATE presentations SET updated_at = datetime('now') WHERE id = ?", [slide.presentation_id])
     await saveBackup(slide.presentation_id)
 

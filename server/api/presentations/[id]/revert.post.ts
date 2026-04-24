@@ -1,9 +1,11 @@
 import { dbGet, dbBatch, dbRun } from '../../../utils/db'
 import { logChange } from '../../../utils/changelog'
+import { requireOwnership } from '../../../utils/ownership'
 import { v4 as uuid } from 'uuid'
 
 export default defineEventHandler(async (event) => {
   const presentationId = getRouterParam(event, 'id')
+  await requireOwnership(event, presentationId!)
   const body = await readBody(event)
   const { hash } = body
 

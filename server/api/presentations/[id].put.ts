@@ -1,7 +1,9 @@
 import { dbRun } from '../../utils/db'
+import { requireOwnership } from '../../utils/ownership'
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
+  const id = getRouterParam(event, 'id')!
+  await requireOwnership(event, id)
   const body = await readBody(event)
 
   const fields: string[] = []
@@ -9,6 +11,7 @@ export default defineEventHandler(async (event) => {
 
   if (body.title !== undefined) { fields.push('title = ?'); values.push(body.title) }
   if (body.theme_id !== undefined) { fields.push('theme_id = ?'); values.push(body.theme_id) }
+  if (body.visibility !== undefined) { fields.push('visibility = ?'); values.push(body.visibility) }
 
   fields.push("updated_at = datetime('now')")
   values.push(id)
