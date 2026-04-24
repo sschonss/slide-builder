@@ -13,6 +13,8 @@ export default defineNuxtConfig({
       background_color: '#0d1117',
       display: 'standalone',
       orientation: 'any',
+      start_url: '/',
+      scope: '/',
       icons: [
         { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
         { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },

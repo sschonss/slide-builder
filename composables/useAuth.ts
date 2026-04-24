@@ -10,7 +10,9 @@ export function useAuth() {
   }
 
   function login() {
-    navigateTo('/auth/github', { external: true })
+    // Use direct location change to keep within PWA context
+    // navigateTo with external: true opens Safari on iOS
+    window.location.href = '/auth/github'
   }
 
   return {
