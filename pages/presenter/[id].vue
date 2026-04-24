@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import type { Slide } from '~/types'
-import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote, RefreshCw, Cast, Link, Check, ArrowLeft } from 'lucide-vue-next'
+import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote, RefreshCw, Cast, Link, Check, ArrowLeft, ShieldAlert } from 'lucide-vue-next'
 
-// No auth middleware — presenter page checks visibility via API
-// Private presentations return 403 for non-owners (handled by server)
+definePageMeta({ middleware: 'auth' })
 
 const route = useRoute()
 const presentationId = route.params.id as string
 
 const { presentation, loading, syncing, init: initCache, forceSync } = useCachedPresentation(presentationId)
 const currentSlideIndex = ref(0)
+const isOwner = computed(() => presentation.value?.isOwner === true)
 
 const slides = computed(() => presentation.value?.slides || [])
 const currentSlide = computed(() => slides.value[currentSlideIndex.value])
@@ -155,6 +155,12 @@ onUnmounted(() => {
   <div v-if="loading" class="presenter-loading">
     <div class="loading-spinner"></div>
     <p>Carregando apresentação...</p>
+  </div>
+  <div v-else-if="!isOwner" class="presenter-denied">
+    <ShieldAlert :size="48" />
+    <h2>Acesso restrito</h2>
+    <p>Apenas o autor pode controlar esta apresentação.</p>
+    <NuxtLink :to="`/present/${presentationId}`" class="btn-audience">Abrir como audiência</NuxtLink>
   </div>
   <div class="presenter-view" v-else>
     <!-- Top: Slides -->
@@ -427,6 +433,38 @@ onUnmounted(() => {
   border-top-color: #58a6ff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+.presenter-denied {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #0d1117;
+  color: #8b949e;
+  gap: 16px;
+  text-align: center;
+}
+.presenter-denied h2 {
+  color: #e6edf3;
+  font-size: 24px;
+}
+.presenter-denied p {
+  font-size: 16px;
+}
+.btn-audience {
+  margin-top: 8px;
+  padding: 10px 24px;
+  background: #238636;
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.btn-audience:hover {
+  background: #2ea043;
 }
 
 /* Notes Row */
