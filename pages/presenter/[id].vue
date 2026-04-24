@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Slide } from '~/types'
-import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote } from 'lucide-vue-next'
+import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote, RefreshCw } from 'lucide-vue-next'
 
 // No auth middleware — presenter page checks visibility via API
 // Private presentations return 403 for non-owners (handled by server)
@@ -8,7 +8,7 @@ import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote } 
 const route = useRoute()
 const presentationId = route.params.id as string
 
-const { data: presentation } = useFetch(`/api/presentations/${presentationId}`)
+const { presentation, loading, syncing, init: initCache, forceSync } = useCachedPresentation(presentationId)
 const currentSlideIndex = ref(0)
 
 const slides = computed(() => presentation.value?.slides || [])
@@ -89,6 +89,7 @@ function handleKeydown(e: KeyboardEvent) {
 }
 
 onMounted(() => {
+  initCache()
   init()
   startTimer()
   window.addEventListener('keydown', handleKeydown)
@@ -102,7 +103,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="presenter-view" v-if="presentation">
+  <div v-if="loading" class="presenter-loading">
+    <div class="loading-spinner"></div>
+    <p>Carregando apresentação...</p>
+  </div>
+  <div class="presenter-view" v-else>
     <!-- Top: Slides -->
     <div class="slides-row">
       <div class="current-slide-box">
@@ -134,6 +139,9 @@ onUnmounted(() => {
         <button @click="toggleTimer" class="ctrl-btn"><component :is="timerRunning ? Pause : Play" :size="16" /></button>
         <button @click="resetTimer" class="ctrl-btn"><RotateCcw :size="16" /></button>
       </div>
+      <button @click="forceSync" class="ctrl-btn sync-btn" :class="{ spinning: syncing }" title="Sincronizar dados do servidor">
+        <RefreshCw :size="16" />
+      </button>
     </div>
 
     <!-- Bottom: Notes -->
@@ -294,6 +302,37 @@ onUnmounted(() => {
 
 .ctrl-btn:hover {
   background: rgba(255, 255, 255, 0.15);
+}
+
+.sync-btn {
+  margin-left: 8px;
+}
+.sync-btn.spinning :deep(svg) {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.presenter-loading {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #0d1117;
+  color: #8b949e;
+  gap: 16px;
+}
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #30363d;
+  border-top-color: #58a6ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 /* Notes Row */

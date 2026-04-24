@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { Slide } from '~/types'
+import { RefreshCw } from 'lucide-vue-next'
 
 const route = useRoute()
 const presentationId = route.params.id as string
 
-const { data: presentation } = useFetch(`/api/presentations/${presentationId}`)
+const { presentation, loading, syncing, init: initCache, forceSync } = useCachedPresentation(presentationId)
 const currentSlideIndex = ref(0)
 
 const slides = computed(() => presentation.value?.slides || [])
@@ -52,9 +53,9 @@ function handleKeydown(e: KeyboardEvent) {
 }
 
 onMounted(() => {
+  initCache()
   init()
   window.addEventListener('keydown', handleKeydown)
-  // Try to enter fullscreen
   nextTick(() => {
     document.documentElement.requestFullscreen?.().catch(() => {})
   })
@@ -67,11 +68,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="present-view" @click="next">
+  <div v-if="loading" class="present-loading">
+    <div class="loading-spinner"></div>
+  </div>
+  <div class="present-view" v-else @click="next">
     <div class="slide-container" v-if="currentSlide">
       <EditorSlidePreview :slide="currentSlide" :theme="theme" />
     </div>
     <div class="slide-counter">{{ currentSlideIndex + 1 }} / {{ slides.length }}</div>
+    <button @click.stop="forceSync" class="sync-btn" :class="{ spinning: syncing }" title="Sincronizar">
+      <RefreshCw :size="14" />
+    </button>
   </div>
 </template>
 
@@ -183,5 +190,46 @@ onUnmounted(() => {
   color: rgba(255, 255, 255, 0.2);
   font-family: 'JetBrains Mono', monospace;
   pointer-events: none;
+}
+
+.present-loading {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #333;
+  border-top-color: #58a6ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.sync-btn {
+  position: fixed;
+  bottom: 16px;
+  left: 24px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+}
+.sync-btn:hover {
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+}
+.sync-btn.spinning :deep(svg) {
+  animation: spin 1s linear infinite;
 }
 </style>
