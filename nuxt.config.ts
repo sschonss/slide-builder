@@ -1,5 +1,17 @@
+import { execSync } from 'child_process'
+
+const gitHash = (() => {
+  try { return execSync('git rev-parse --short=4 HEAD').toString().trim() }
+  catch { return 'dev' }
+})()
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
+  vite: {
+    define: {
+      __APP_VERSION__: JSON.stringify(gitHash),
+    },
+  },
   devtools: { enabled: true },
   ssr: false,
   modules: ['nuxt-auth-utils', '@vite-pwa/nuxt'],
