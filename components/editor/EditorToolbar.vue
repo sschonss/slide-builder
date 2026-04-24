@@ -65,7 +65,7 @@ async function downloadBundle() {
 <template>
   <div class="toolbar">
     <div class="toolbar-left">
-      <NuxtLink to="/" class="back"><ChevronLeft :size="14" /> Voltar</NuxtLink>
+      <NuxtLink to="/dashboard" class="back"><ChevronLeft :size="14" /> Voltar</NuxtLink>
       <span class="title">{{ title }}</span>
     </div>
     <div class="toolbar-center">

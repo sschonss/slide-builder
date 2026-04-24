@@ -2,6 +2,8 @@
 import type { Slide } from '~/types'
 import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote } from 'lucide-vue-next'
 
+definePageMeta({ middleware: 'auth' })
+
 const route = useRoute()
 const presentationId = route.params.id as string
 

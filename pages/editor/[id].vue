@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Slide } from '~/types'
 
+definePageMeta({ middleware: 'auth' })
+
 const route = useRoute()
 const presentationId = route.params.id as string
 
