@@ -112,10 +112,10 @@ function generateComparison(slide: Slide): string {
   const data = slide.data as ComparisonData
   const lines = ['---', 'layout: two-cols', '---', '', `# ${data.title}`, '', '::left::', '']
   lines.push(`### ${data.left_title}`, '')
-  data.left_items.forEach(item => lines.push(`- ${item}`))
+  ;(data.left_items || []).forEach(item => lines.push(`- ${item}`))
   lines.push('', '::right::', '')
-  lines.push(`### ${data.right_title}`, '')
-  data.right_items.forEach(item => lines.push(`- ${item}`))
+  lines.push(`### ${data.right_title || ''}`, '')
+  ;(data.right_items || []).forEach(item => lines.push(`- ${item}`))
   appendNotes(lines, slide.notes)
   return lines.join('\n')
 }

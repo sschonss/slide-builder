@@ -120,7 +120,7 @@ async function handleExport() {
     </div>
 
     <!-- Theme Editor Modal -->
-    <ThemeThemeEditor
+    <ThemeEditor
       v-if="showThemeEditor && presentation.theme"
       :theme="presentation.theme"
       @close="showThemeEditor = false"
