@@ -3,11 +3,9 @@ import { LogIn } from 'lucide-vue-next'
 
 const { isLoggedIn, login } = useAuth()
 
-onMounted(() => {
-  if (isLoggedIn.value) {
-    navigateTo('/dashboard')
-  }
-})
+watch(isLoggedIn, (value) => {
+  if (value) navigateTo('/dashboard')
+}, { immediate: true })
 </script>
 
 <template>

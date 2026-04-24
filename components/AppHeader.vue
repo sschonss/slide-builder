@@ -7,12 +7,13 @@ const showMenu = ref(false)
 
 function toggleMenu() { showMenu.value = !showMenu.value }
 
-onMounted(() => {
-  document.addEventListener('click', (e) => {
-    const el = document.querySelector('.user-menu')
-    if (el && !el.contains(e.target as Node)) showMenu.value = false
-  })
-})
+function handleClickOutside(e: Event) {
+  const el = document.querySelector('.user-menu')
+  if (el && !el.contains(e.target as Node)) showMenu.value = false
+}
+
+onMounted(() => document.addEventListener('click', handleClickOutside))
+onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
 <template>

@@ -1,9 +1,11 @@
 import { dbGet, dbAll } from '../utils/db'
+import { requireOwnership } from '../utils/ownership'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const id = query.id as string
   if (!id) throw createError({ statusCode: 400, message: 'id required' })
+  await requireOwnership(event, id)
 
   const presentation = await dbGet('SELECT * FROM presentations WHERE id = ?', [id]) as any
   if (!presentation) throw createError({ statusCode: 404, message: 'Presentation not found' })

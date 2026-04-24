@@ -1,9 +1,11 @@
 import { execSync } from 'child_process'
 import { join, resolve } from 'path'
 import { existsSync } from 'fs'
+import { requireOwnership } from '../utils/ownership'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
+  await requireOwnership(event, body.presentation_id)
   const outDir = join(process.cwd(), 'output', body.presentation_id)
   const slidesPath = join(outDir, 'slides.md')
 
