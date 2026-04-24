@@ -11,7 +11,9 @@ export function generateMarkdown(title: string, slides: Slide[], theme: ThemeCon
     }
   })
 
-  return parts.join('\n\n---\n\n')
+  // In Slidev, `---` is both the slide separator AND frontmatter delimiter.
+  // Each slide already starts with `---`, so join without adding another.
+  return parts.join('\n\n')
 }
 
 function generateCoverWithFrontmatter(slide: Slide, title: string, theme: ThemeConfig): string {

@@ -14,8 +14,8 @@ export default defineEventHandler(async (event) => {
   try {
     const slidevBin = resolve(process.cwd(), 'node_modules/.bin/slidev')
     execSync(`${slidevBin} export "${slidesPath}" --output "${join(outDir, 'export.pdf')}"`, {
-      cwd: outDir,
-      timeout: 60000,
+      cwd: process.cwd(),
+      timeout: 120000,
     })
     return { success: true, path: join(outDir, 'export.pdf') }
   } catch (err: any) {
