@@ -103,10 +103,10 @@ async function toggleVisibility(p: any) {
 
     <div class="grid" v-else-if="presentations?.length">
       <div v-for="p in presentations" :key="p.id" class="card" :class="{ 'card-busy': deletingId === p.id }">
-        <NuxtLink :to="`/editor/${p.id}`" class="card-body">
+        <div class="card-body" @click="navigateTo(`/editor/${p.id}`)">
           <h3>{{ p.title }}</h3>
           <p class="meta">{{ p.slide_count || 0 }} slides · {{ new Date(p.updated_at).toLocaleDateString('pt-BR') }}</p>
-        </NuxtLink>
+        </div>
         <div class="card-actions">
           <button class="btn-vis" @click.stop="toggleVisibility(p)" :disabled="togglingId === p.id" :title="p.visibility === 'public' ? 'Pública' : 'Privada'">
             <Loader2 v-if="togglingId === p.id" :size="15" class="spin" />

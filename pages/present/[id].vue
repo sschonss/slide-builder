@@ -117,60 +117,60 @@ onUnmounted(() => {
 .slide-container :deep(.slide) {
   border-radius: 0;
   box-shadow: none;
-  padding: 4vh 5vw;
+  padding: 60px 80px;
 }
 
 .slide-container :deep(h1) {
-  font-size: 3.5vw;
-  margin-bottom: 0.8vw;
+  font-size: 56px;
+  margin-bottom: 16px;
 }
 
 .slide-container :deep(h2) {
-  font-size: 2.25vw;
+  font-size: 36px;
 }
 
 .slide-container :deep(.author) {
-  font-size: 1.5vw;
+  font-size: 24px;
 }
 
 .slide-container :deep(.content-slide ul) {
-  font-size: 2vw;
+  font-size: 32px;
   line-height: 2;
 }
 
 .slide-container :deep(.content-slide blockquote) {
-  font-size: 1.75vw;
+  font-size: 28px;
 }
 
 .slide-container :deep(.section-num) {
-  font-size: 1.25vw;
+  font-size: 20px;
 }
 
 .slide-container :deep(.code-block) {
-  font-size: 1.4vw;
+  font-size: 22px;
   max-height: none;
-  padding: 2vw;
+  padding: 32px;
 }
 
 .slide-container :deep(.note) {
-  font-size: 1.25vw;
+  font-size: 20px;
 }
 
 .slide-container :deep(.columns) {
-  gap: 2.5vw;
+  gap: 40px;
 }
 
 .slide-container :deep(.col) {
-  padding: 2vw;
+  padding: 32px;
 }
 
 .slide-container :deep(.col h3) {
-  font-size: 1.75vw;
-  margin-bottom: 0.8vw;
+  font-size: 28px;
+  margin-bottom: 16px;
 }
 
 .slide-container :deep(.col ul) {
-  font-size: 1.5vw;
+  font-size: 24px;
   line-height: 2;
 }
 
