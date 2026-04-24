@@ -27,11 +27,13 @@ async function addSlide(template: string) {
   })
   await refresh()
   currentSlideIndex.value = slides.value.length - 1
+  await regenerateMarkdown()
 }
 
 async function updateSlide(slideId: string, updates: Partial<Slide>) {
   await $fetch(`/api/slides/${slideId}`, { method: 'PUT', body: updates })
   await refresh()
+  await regenerateMarkdown()
 }
 
 async function deleteSlide(slideId: string) {
@@ -41,11 +43,19 @@ async function deleteSlide(slideId: string) {
     currentSlideIndex.value = Math.max(0, currentSlideIndex.value - 1)
   }
   await refresh()
+  await regenerateMarkdown()
 }
 
 async function reorderSlides(newOrder: { id: string; order: number }[]) {
   await $fetch('/api/slides/reorder', { method: 'PUT', body: { slides: newOrder } })
   await refresh()
+  await regenerateMarkdown()
+}
+
+async function regenerateMarkdown() {
+  try {
+    await $fetch('/api/generate', { method: 'POST', body: { presentation_id: presentationId } })
+  } catch {}
 }
 
 async function handlePresent() {
