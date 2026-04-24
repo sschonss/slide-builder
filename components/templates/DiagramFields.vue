@@ -4,6 +4,7 @@ const props = defineProps<{ data: DiagramData; presentationId?: string; slideId?
 const emit = defineEmits<{ (e: 'update', data: DiagramData): void }>()
 
 const showExcalidraw = ref(false)
+const excalidrawFromMermaid = ref(false)
 
 function update(field: keyof DiagramData, value: string) {
   emit('update', { ...props.data, [field]: value })
@@ -55,9 +56,14 @@ async function onExcalidrawSave(payload: { scene: string; svg: string }) {
       <div v-if="data.excalidraw_svg" class="svg-thumb" v-html="data.excalidraw_svg" />
     </template>
 
-    <label v-if="data.diagram_type === 'mermaid'">Código Mermaid
-      <textarea :value="data.mermaid_code" @input="update('mermaid_code', ($event.target as HTMLTextAreaElement).value)" rows="8" class="code" placeholder="graph TD&#10;  A-->B" />
-    </label>
+    <template v-if="data.diagram_type === 'mermaid'">
+      <label>Código Mermaid
+        <textarea :value="data.mermaid_code" @input="update('mermaid_code', ($event.target as HTMLTextAreaElement).value)" rows="8" class="code" placeholder="graph TD&#10;  A-->B" />
+      </label>
+      <button v-if="data.mermaid_code?.trim()" class="excalidraw-btn visual" @click="excalidrawFromMermaid = true; showExcalidraw = true">
+        ✏️ Ajustar visualmente
+      </button>
+    </template>
 
     <label v-if="data.diagram_type === 'embed'">URL do embed
       <input :value="data.embed_url" @input="update('embed_url', ($event.target as HTMLInputElement).value)" placeholder="https://..." />
@@ -68,8 +74,9 @@ async function onExcalidrawSave(payload: { scene: string; svg: string }) {
     <EditorExcalidrawModal
       v-if="showExcalidraw"
       :scene="data.excalidraw_scene"
+      :mermaid-code="excalidrawFromMermaid ? data.mermaid_code : undefined"
       @save="onExcalidrawSave"
-      @close="showExcalidraw = false"
+      @close="showExcalidraw = false; excalidrawFromMermaid = false"
     />
   </div>
 </template>
@@ -81,6 +88,8 @@ input, textarea, select { background: rgba(255,255,255,0.05); border: 1px solid 
 .code { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
 .excalidraw-btn { background: #533483; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
 .excalidraw-btn:hover { background: #6b44a8; }
+.excalidraw-btn.visual { background: #0f3460; }
+.excalidraw-btn.visual:hover { background: #1a4a80; }
 .svg-thumb { margin-top: 8px; background: rgba(255,255,255,0.03); border: 1px solid #30363d; border-radius: 6px; padding: 8px; max-height: 150px; overflow: hidden; }
 .svg-thumb :deep(svg) { width: 100%; height: auto; max-height: 140px; }
 </style>

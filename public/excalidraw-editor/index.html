@@ -40,7 +40,7 @@
     const { Excalidraw, exportToSvg } = ExcalidrawLib;
 
     function App() {
-      const excalidrawRef = useRef(null);
+      const excalidrawAPI = useRef(null);
       const [saving, setSaving] = useState(false);
       const [initialData, setInitialData] = useState(null);
       const [ready, setReady] = useState(false);
@@ -53,6 +53,9 @@
                 setInitialData(JSON.parse(e.data.scene));
               } catch { /* ignore parse errors */ }
             }
+            if (e.data.mermaidCode) {
+              convertMermaid(e.data.mermaidCode);
+            }
             setReady(true);
           }
         }
@@ -61,27 +64,52 @@
         return () => window.removeEventListener('message', handleMessage);
       }, []);
 
+      const convertMermaid = useCallback(async (code) => {
+        try {
+          const { parseMermaidToExcalidraw } = await import('https://esm.sh/@excalidraw/mermaid-to-excalidraw@2.2.2');
+          const { elements, files } = await parseMermaidToExcalidraw(code, { fontSize: 16 });
+
+          const convertFn = ExcalidrawLib.convertToExcalidrawElements;
+          const finalElements = convertFn ? convertFn(elements) : elements;
+
+          // Wait for API to be ready then load elements
+          const waitForAPI = setInterval(() => {
+            const api = excalidrawAPI.current;
+            if (api) {
+              clearInterval(waitForAPI);
+              api.updateScene({ elements: finalElements });
+              if (files) api.addFiles(Object.values(files));
+              api.scrollToContent(finalElements, { fitToContent: true });
+            }
+          }, 100);
+          setTimeout(() => clearInterval(waitForAPI), 5000);
+        } catch (err) {
+          console.error('Mermaid conversion failed:', err);
+          alert('Erro ao converter Mermaid: ' + err.message);
+        }
+      }, []);
+
       const handleSave = useCallback(async () => {
-        if (!excalidrawRef.current || saving) return;
+        const api = excalidrawAPI.current;
+        if (!api || saving) return;
         setSaving(true);
         try {
-          const api = excalidrawRef.current;
           const elements = api.getSceneElements();
           const appState = api.getAppState();
           const files = api.getFiles();
 
           const svgElement = await exportToSvg({
-            elements: elements,
+            elements,
             appState: { ...appState, exportWithDarkMode: true, exportBackground: false },
-            files: files,
+            files,
           });
           const svgString = new XMLSerializer().serializeToString(svgElement);
-
           const scene = JSON.stringify({ elements, appState: { viewBackgroundColor: appState.viewBackgroundColor }, files });
 
           window.parent.postMessage({ type: 'save', scene, svg: svgString }, '*');
         } catch (err) {
           console.error('Save failed:', err);
+          alert('Erro ao salvar: ' + err.message);
         } finally {
           setSaving(false);
         }
@@ -104,7 +132,7 @@
         ),
         h('div', { style: { width: '100%', height: '100%', paddingTop: '44px' } },
           h(Excalidraw, {
-            ref: excalidrawRef,
+            excalidrawAPI: (api) => { excalidrawAPI.current = api; },
             initialData: initialData || undefined,
             theme: 'dark',
             langCode: 'pt-BR',

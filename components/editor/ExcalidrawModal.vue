@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{
   scene?: string
+  mermaidCode?: string
   darkMode?: boolean
 }>()
 
@@ -21,6 +22,7 @@ function sendScene() {
   iframeRef.value.contentWindow.postMessage({
     type: 'load',
     scene: props.scene || null,
+    mermaidCode: props.mermaidCode || null,
     darkMode: props.darkMode ?? true,
   }, '*')
 }
