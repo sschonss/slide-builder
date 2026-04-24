@@ -35,7 +35,7 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: '/index.html',
+      navigateFallback: '/',
       navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/excalidraw-editor\//],
       globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
       runtimeCaching: [
@@ -75,6 +75,9 @@ export default defineNuxtConfig({
     preset: 'vercel',
     experimental: {
       asyncContext: true,
+    },
+    prerender: {
+      routes: ['/', '/200.html'],
     },
   },
   app: {
