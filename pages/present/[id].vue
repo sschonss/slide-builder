@@ -184,7 +184,7 @@ onUnmounted(() => {
 }
 
 .slide-container :deep(.diagram-placeholder) {
-  margin-top: 1.5vw;
+  margin-top: 1vw;
   flex: 1;
   display: flex;
   align-items: center;
@@ -203,9 +203,10 @@ onUnmounted(() => {
 }
 
 .slide-container :deep(.mermaid-rendered svg) {
-  width: 80vw !important;
-  height: auto !important;
+  max-width: 85vw;
   max-height: 65vh;
+  width: auto !important;
+  height: auto !important;
 }
 
 .slide-container :deep(.excalidraw-preview) {
@@ -218,9 +219,10 @@ onUnmounted(() => {
 }
 
 .slide-container :deep(.excalidraw-preview svg) {
-  width: 80vw !important;
-  height: auto !important;
+  max-width: 85vw;
   max-height: 65vh;
+  width: auto !important;
+  height: auto !important;
 }
 
 .slide-container :deep(.placeholder-text) {
