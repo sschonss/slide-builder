@@ -1,13 +1,15 @@
 <script setup lang="ts">
+import { Pin, BookOpen, List, GitBranch, Code2, Columns2 } from 'lucide-vue-next'
+
 const emit = defineEmits<{ (e: 'select', template: string): void; (e: 'close'): void }>()
 
 const templates = [
-  { id: 'cover', name: 'Cover', icon: '📌', desc: 'Slide de abertura' },
-  { id: 'section', name: 'Section', icon: '📑', desc: 'Divisor de bloco' },
-  { id: 'content', name: 'Content', icon: '📝', desc: 'Bullets + quote' },
-  { id: 'diagram', name: 'Diagram', icon: '📊', desc: 'Mermaid / imagem' },
-  { id: 'code', name: 'Code', icon: '💻', desc: 'Código com highlight' },
-  { id: 'comparison', name: 'Comparison', icon: '⚖️', desc: 'Lado a lado' },
+  { id: 'cover', name: 'Cover', icon: Pin, desc: 'Slide de abertura' },
+  { id: 'section', name: 'Section', icon: BookOpen, desc: 'Divisor de bloco' },
+  { id: 'content', name: 'Content', icon: List, desc: 'Bullets + quote' },
+  { id: 'diagram', name: 'Diagram', icon: GitBranch, desc: 'Mermaid / imagem' },
+  { id: 'code', name: 'Code', icon: Code2, desc: 'Código com highlight' },
+  { id: 'comparison', name: 'Comparison', icon: Columns2, desc: 'Lado a lado' },
 ]
 </script>
 
@@ -17,7 +19,7 @@ const templates = [
       <h3>Escolha um template</h3>
       <div class="grid">
         <button v-for="t in templates" :key="t.id" class="template-btn" @click="emit('select', t.id)">
-          <span class="icon">{{ t.icon }}</span>
+          <component :is="t.icon" :size="20" class="icon" />
           <span class="name">{{ t.name }}</span>
           <span class="desc">{{ t.desc }}</span>
         </button>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Slide } from '~/types'
+import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote } from 'lucide-vue-next'
 
 const route = useRoute()
 const presentationId = route.params.id as string
@@ -119,22 +120,22 @@ onUnmounted(() => {
     <!-- Middle: Controls -->
     <div class="controls-row">
       <div class="timer" :class="{ paused: !timerRunning }">
-        ⏱ {{ timerDisplay }}
+        <Timer :size="22" /> {{ timerDisplay }}
       </div>
       <div class="nav-controls">
-        <button @click="prev" :disabled="currentSlideIndex <= 0" class="nav-btn">◀</button>
+        <button @click="prev" :disabled="currentSlideIndex <= 0" class="nav-btn"><ChevronLeft :size="18" /></button>
         <span class="slide-count">{{ currentSlideIndex + 1 }} / {{ slides.length }}</span>
-        <button @click="next" :disabled="currentSlideIndex >= slides.length - 1" class="nav-btn">▶</button>
+        <button @click="next" :disabled="currentSlideIndex >= slides.length - 1" class="nav-btn"><ChevronRight :size="18" /></button>
       </div>
       <div class="timer-controls">
-        <button @click="toggleTimer" class="ctrl-btn">{{ timerRunning ? '⏸' : '▶' }}</button>
-        <button @click="resetTimer" class="ctrl-btn">↺</button>
+        <button @click="toggleTimer" class="ctrl-btn"><component :is="timerRunning ? Pause : Play" :size="16" /></button>
+        <button @click="resetTimer" class="ctrl-btn"><RotateCcw :size="16" /></button>
       </div>
     </div>
 
     <!-- Bottom: Notes -->
     <div class="notes-row">
-      <div class="notes-label">📝 Notas do Palestrante</div>
+      <div class="notes-label"><StickyNote :size="14" /> Notas do Palestrante</div>
       <div class="notes-content" v-if="notes">{{ notes }}</div>
       <div class="notes-empty" v-else>Sem notas para este slide</div>
     </div>

@@ -51,7 +51,7 @@ async function onExcalidrawSave(payload: { scene: string; svg: string }) {
 
     <template v-if="data.diagram_type === 'excalidraw'">
       <button class="excalidraw-btn" @click="showExcalidraw = true">
-        ✏️ {{ data.excalidraw_svg ? 'Editar no Excalidraw' : 'Abrir Excalidraw' }}
+        {{ data.excalidraw_svg ? 'Editar no Excalidraw' : 'Abrir Excalidraw' }}
       </button>
       <div v-if="data.excalidraw_svg" class="svg-thumb" v-html="data.excalidraw_svg" />
     </template>
@@ -61,7 +61,7 @@ async function onExcalidrawSave(payload: { scene: string; svg: string }) {
         <textarea :value="data.mermaid_code" @input="update('mermaid_code', ($event.target as HTMLTextAreaElement).value)" rows="8" class="code" placeholder="graph TD&#10;  A-->B" />
       </label>
       <button v-if="data.mermaid_code?.trim()" class="excalidraw-btn visual" @click="excalidrawFromMermaid = true; showExcalidraw = true">
-        ✏️ Ajustar visualmente
+        Ajustar visualmente
       </button>
     </template>
 

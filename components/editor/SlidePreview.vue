@@ -74,10 +74,10 @@ watch(mermaidCode, async (code) => {
             </template>
             <template v-else-if="(slide.data as DiagramData).diagram_type === 'excalidraw'">
               <div v-if="(slide.data as DiagramData).excalidraw_svg" class="excalidraw-preview" v-html="(slide.data as DiagramData).excalidraw_svg" />
-              <span v-else class="placeholder-text">🎨 Excalidraw</span>
+              <span v-else class="placeholder-text">Excalidraw</span>
             </template>
             <template v-else>
-              <span class="placeholder-text">{{ (slide.data as DiagramData).diagram_type === 'image' ? '🖼 Imagem' : '🔗 Embed' }}</span>
+              <span class="placeholder-text">{{ (slide.data as DiagramData).diagram_type === 'image' ? 'Imagem' : 'Embed' }}</span>
             </template>
           </div>
           <p v-if="(slide.data as DiagramData).caption" class="caption">{{ (slide.data as DiagramData).caption }}</p>

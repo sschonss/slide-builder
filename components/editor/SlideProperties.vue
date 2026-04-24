@@ -25,12 +25,12 @@ function onTemplateChange(template: SlideTemplate) {
 }
 
 const templateOptions = [
-  { value: 'cover', label: '📌 Cover' },
-  { value: 'section', label: '📑 Section' },
-  { value: 'content', label: '📝 Content' },
-  { value: 'diagram', label: '📊 Diagram' },
-  { value: 'code', label: '💻 Code' },
-  { value: 'comparison', label: '⚖️ Comparison' },
+  { value: 'cover', label: 'Cover' },
+  { value: 'section', label: 'Section' },
+  { value: 'content', label: 'Content' },
+  { value: 'diagram', label: 'Diagram' },
+  { value: 'code', label: 'Code' },
+  { value: 'comparison', label: 'Comparison' },
 ]
 </script>
 

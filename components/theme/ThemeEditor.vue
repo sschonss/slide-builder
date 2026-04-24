@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Theme, ThemeConfig } from '~/types'
+import { Palette } from 'lucide-vue-next'
 
 const props = defineProps<{ theme: Theme }>()
 const emit = defineEmits<{ (e: 'close'): void; (e: 'saved'): void }>()
@@ -23,7 +24,7 @@ async function save() {
   <div class="overlay" @click.self="emit('close')">
     <div class="modal">
       <div class="modal-header">
-        <h3>🎨 Editar Tema</h3>
+        <h3><Palette :size="16" /> Editar Tema</h3>
         <button class="close" @click="emit('close')">×</button>
       </div>
 

@@ -58,7 +58,7 @@ async function onExcalidrawSave(payload: { scene: string; svg: string }) {
     <label>Quote (opcional)<textarea :value="data.quote" @input="updateQuote(($event.target as HTMLTextAreaElement).value)" rows="2" /></label>
 
     <label>Imagem (path)<input :value="data.image" @input="emit('update', { ...data, image: ($event.target as HTMLInputElement).value })" placeholder="caminho da imagem..." /></label>
-    <button class="excalidraw-btn" @click="showExcalidraw = true">🎨 Criar/editar imagem com Excalidraw</button>
+    <button class="excalidraw-btn" @click="showExcalidraw = true">Criar/editar imagem com Excalidraw</button>
 
     <EditorExcalidrawModal
       v-if="showExcalidraw"

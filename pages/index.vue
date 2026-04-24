@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Plus, Upload, Trash2 } from 'lucide-vue-next'
+
 const { data: presentations, refresh } = useFetch('/api/presentations')
 
 async function createPresentation() {
@@ -37,9 +39,9 @@ async function deletePresentation(id: string) {
 <template>
   <div class="container">
     <header class="header">
-      <h1>📊 Slide Builder</h1>
-      <button class="btn-primary" @click="createPresentation">+ Nova Apresentação</button>
-      <button class="btn-import" @click="importPresentation">📂 Importar</button>
+      <h1>Slide Builder</h1>
+      <button class="btn-primary" @click="createPresentation"><Plus :size="14" /> Nova Apresentação</button>
+      <button class="btn-import" @click="importPresentation"><Upload :size="14" /> Importar</button>
     </header>
 
     <div class="grid" v-if="presentations?.length">
@@ -48,7 +50,7 @@ async function deletePresentation(id: string) {
           <h3>{{ p.title }}</h3>
           <p class="meta">{{ p.slide_count || 0 }} slides · {{ new Date(p.updated_at).toLocaleDateString('pt-BR') }}</p>
         </NuxtLink>
-        <button class="btn-delete" @click.stop="deletePresentation(p.id)">🗑</button>
+        <button class="btn-delete" @click.stop="deletePresentation(p.id)"><Trash2 :size="14" /></button>
       </div>
     </div>
 
@@ -63,9 +65,9 @@ async function deletePresentation(id: string) {
 .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
 .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; gap: 8px; }
 .header h1 { font-size: 24px; }
-.btn-primary { background: #e94560; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.btn-primary { background: #e94560; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px; }
 .btn-primary:hover { background: #d63851; }
-.btn-import { background: rgba(255,255,255,0.08); color: #e6edf3; border: 1px solid #30363d; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.btn-import { background: rgba(255,255,255,0.08); color: #e6edf3; border: 1px solid #30363d; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px; }
 .btn-import:hover { background: rgba(255,255,255,0.15); }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; display: flex; align-items: center; }

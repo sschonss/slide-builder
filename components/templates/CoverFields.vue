@@ -31,7 +31,7 @@ async function onExcalidrawSave(payload: { scene: string; svg: string }) {
     <label>Subtítulo<input :value="data.subtitle" @input="update('subtitle', ($event.target as HTMLInputElement).value)" /></label>
     <label>Autor<input :value="data.author" @input="update('author', ($event.target as HTMLInputElement).value)" /></label>
     <label>Background image (path)<input :value="data.background_image" @input="update('background_image', ($event.target as HTMLInputElement).value)" placeholder="caminho da imagem..." /></label>
-    <button class="excalidraw-btn" @click="showExcalidraw = true">🎨 Editar background com Excalidraw</button>
+    <button class="excalidraw-btn" @click="showExcalidraw = true">Editar background com Excalidraw</button>
 
     <EditorExcalidrawModal
       v-if="showExcalidraw"
