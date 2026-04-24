@@ -17,7 +17,7 @@ const nextSlide = computed(() => slides.value[currentSlideIndex.value + 1] || nu
 const theme = computed(() => presentation.value?.theme?.config)
 const notes = computed(() => currentSlide.value?.notes || '')
 
-const { remoteIndex, init, sendIndex, destroy } = usePresenterSync(presentationId)
+const { remoteIndex, init, sendIndex, destroy } = usePresenterSync(presentationId, 'presenter')
 
 // Timer
 const elapsed = ref(0)

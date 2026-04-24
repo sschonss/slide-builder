@@ -43,6 +43,7 @@ async function _initDbInternal() {
       { sql: `CREATE TABLE IF NOT EXISTS slides (id TEXT PRIMARY KEY, presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE, "order" INTEGER NOT NULL DEFAULT 0, template TEXT NOT NULL CHECK(template IN ('cover','section','content','diagram','code','comparison')), data TEXT NOT NULL DEFAULT '{}', notes TEXT)`, args: [] },
       { sql: `CREATE TABLE IF NOT EXISTS assets (id TEXT PRIMARY KEY, presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE, filename TEXT NOT NULL, path TEXT NOT NULL, type TEXT NOT NULL CHECK(type IN ('image','video','logo')))`, args: [] },
       { sql: `CREATE TABLE IF NOT EXISTS change_log (id INTEGER PRIMARY KEY AUTOINCREMENT, presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE, action TEXT NOT NULL, description TEXT NOT NULL, slide_hash TEXT, snapshot TEXT, created_at DATETIME NOT NULL DEFAULT (datetime('now')))`, args: [] },
+      { sql: `CREATE TABLE IF NOT EXISTS presenter_sync (presentation_id TEXT PRIMARY KEY REFERENCES presentations(id) ON DELETE CASCADE, slide_index INTEGER NOT NULL DEFAULT 0, updated_at DATETIME NOT NULL DEFAULT (datetime('now')))`, args: [] },
     ], 'write')
 
     // ALTER TABLE migrations — safe to fail if columns already exist

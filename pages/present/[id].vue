@@ -11,7 +11,7 @@ const slides = computed(() => presentation.value?.slides || [])
 const currentSlide = computed(() => slides.value[currentSlideIndex.value])
 const theme = computed(() => presentation.value?.theme?.config)
 
-const { remoteIndex, init, sendIndex, destroy } = usePresenterSync(presentationId)
+const { remoteIndex, init, sendIndex, destroy } = usePresenterSync(presentationId, 'audience')
 
 function goTo(index: number) {
   if (index < 0 || index >= slides.value.length) return
