@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Excalidraw Editor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+    .toolbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      display: flex; justify-content: flex-end; gap: 8px;
+      padding: 8px 16px; background: rgba(0,0,0,0.8);
+    }
+    .toolbar button {
+      padding: 8px 20px; border: none; border-radius: 6px;
+      font-size: 14px; cursor: pointer; font-weight: 600;
+    }
+    .btn-save { background: #e94560; color: white; }
+    .btn-save:hover { background: #d63851; }
+    .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-cancel { background: #30363d; color: #e6edf3; }
+    .btn-cancel:hover { background: #484f58; }
+    .loading {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; background: #1a1a2e; color: #e6edf3;
+      font-family: Inter, sans-serif; font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"><div class="loading">Carregando Excalidraw...</div></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@excalidraw/excalidraw/dist/excalidraw.production.min.js" crossorigin></script>
+
+  <script>
+    const { createElement: h, useRef, useState, useEffect, useCallback } = React;
+    const { Excalidraw, exportToSvg } = ExcalidrawLib;
+
+    function App() {
+      const excalidrawRef = useRef(null);
+      const [saving, setSaving] = useState(false);
+      const [initialData, setInitialData] = useState(null);
+      const [ready, setReady] = useState(false);
+
+      useEffect(() => {
+        function handleMessage(e) {
+          if (e.data && e.data.type === 'load') {
+            if (e.data.scene) {
+              try {
+                setInitialData(JSON.parse(e.data.scene));
+              } catch { /* ignore parse errors */ }
+            }
+            setReady(true);
+          }
+        }
+        window.addEventListener('message', handleMessage);
+        window.parent.postMessage({ type: 'ready' }, '*');
+        return () => window.removeEventListener('message', handleMessage);
+      }, []);
+
+      const handleSave = useCallback(async () => {
+        if (!excalidrawRef.current || saving) return;
+        setSaving(true);
+        try {
+          const api = excalidrawRef.current;
+          const elements = api.getSceneElements();
+          const appState = api.getAppState();
+          const files = api.getFiles();
+
+          const svgElement = await exportToSvg({
+            elements: elements,
+            appState: { ...appState, exportWithDarkMode: true, exportBackground: false },
+            files: files,
+          });
+          const svgString = new XMLSerializer().serializeToString(svgElement);
+
+          const scene = JSON.stringify({ elements, appState: { viewBackgroundColor: appState.viewBackgroundColor }, files });
+
+          window.parent.postMessage({ type: 'save', scene, svg: svgString }, '*');
+        } catch (err) {
+          console.error('Save failed:', err);
+        } finally {
+          setSaving(false);
+        }
+      }, [saving]);
+
+      const handleCancel = useCallback(() => {
+        window.parent.postMessage({ type: 'close' }, '*');
+      }, []);
+
+      if (!ready) {
+        return h('div', { className: 'loading' }, 'Carregando Excalidraw...');
+      }
+
+      return h('div', { style: { width: '100%', height: '100%' } },
+        h('div', { className: 'toolbar' },
+          h('button', { className: 'btn-cancel', onClick: handleCancel }, 'Cancelar'),
+          h('button', { className: 'btn-save', onClick: handleSave, disabled: saving },
+            saving ? 'Salvando...' : '💾 Salvar'
+          ),
+        ),
+        h('div', { style: { width: '100%', height: '100%', paddingTop: '44px' } },
+          h(Excalidraw, {
+            ref: excalidrawRef,
+            initialData: initialData || undefined,
+            theme: 'dark',
+            langCode: 'pt-BR',
+          })
+        )
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+  </script>
+</body>
+</html>
