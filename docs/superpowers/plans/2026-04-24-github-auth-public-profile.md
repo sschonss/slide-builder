@@ -1329,5 +1329,5 @@ The user needs to add these env vars to Vercel:
 - `NUXT_SESSION_PASSWORD` (generate with `openssl rand -base64 32`)
 
 And create a GitHub OAuth App at https://github.com/settings/developers with:
-- Homepage URL: `https://slide-builder-teal.vercel.app`
-- Callback URL: `https://slide-builder-teal.vercel.app/auth/github`
+- Homepage URL: `https://slide-builder-dev.vercel.app`
+- Callback URL: `https://slide-builder-dev.vercel.app/auth/github`

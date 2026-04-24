@@ -90,7 +90,7 @@ GET /api/users/:username
 GET /api/users/:username/presentations</code></pre>
 
         <h4>Exemplo</h4>
-        <pre><code>curl https://slide-builder-teal.vercel.app/api/users/search?q=luiz</code></pre>
+        <pre><code>curl https://slide-builder-dev.vercel.app/api/users/search?q=luiz</code></pre>
         <p>Retorna:</p>
         <pre><code>[
   {
