@@ -1,8 +1,11 @@
 <template>
-  <div>
+  <div class="app-layout">
     <SavingIndicator />
     <AppHeader />
-    <NuxtPage />
+    <main class="app-main">
+      <NuxtPage />
+    </main>
+    <AppFooter />
   </div>
 </template>
 
@@ -15,4 +18,6 @@ body {
   min-height: 100vh;
 }
 a { color: inherit; text-decoration: none; }
+.app-layout { display: flex; flex-direction: column; min-height: 100vh; }
+.app-main { flex: 1; }
 </style>

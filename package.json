@@ -1,7 +1,7 @@
 {
   "name": "slide-builder",
   "version": "1.0.0",
-  "description": "",
+  "description": "Crie apresentações profissionais no browser com temas, export PDF e apresentação em tempo real",
   "main": "index.js",
   "directories": {
     "doc": "docs"
