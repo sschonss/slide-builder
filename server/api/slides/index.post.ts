@@ -1,4 +1,5 @@
 import { getDb } from '../../utils/db'
+import { saveBackup } from '../../utils/backup'
 import { v4 as uuid } from 'uuid'
 
 const DEFAULT_DATA: Record<string, object> = {
@@ -28,6 +29,7 @@ export default defineEventHandler(async (event) => {
   ).run(id, body.presentation_id, order, template, JSON.stringify(data), body.notes || null)
 
   db.prepare("UPDATE presentations SET updated_at = datetime('now') WHERE id = ?").run(body.presentation_id)
+  saveBackup(body.presentation_id)
 
   return { id, presentation_id: body.presentation_id, order, template, data, notes: body.notes || null }
 })

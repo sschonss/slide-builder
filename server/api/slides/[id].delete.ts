@@ -1,4 +1,5 @@
 import { getDb } from '../../utils/db'
+import { saveBackup } from '../../utils/backup'
 
 export default defineEventHandler((event) => {
   const id = getRouterParam(event, 'id')
@@ -16,6 +17,7 @@ export default defineEventHandler((event) => {
     remaining.forEach((s: any, i: number) => update.run(i, s.id))
 
     db.prepare("UPDATE presentations SET updated_at = datetime('now') WHERE id = ?").run(slide.presentation_id)
+    saveBackup(slide.presentation_id)
   }
 
   return { success: true }

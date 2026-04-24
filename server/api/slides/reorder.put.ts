@@ -1,4 +1,5 @@
 import { getDb } from '../../utils/db'
+import { saveBackup } from '../../utils/backup'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -12,5 +13,12 @@ export default defineEventHandler(async (event) => {
   })
 
   runAll(body.slides)
+
+  // Get presentation_id from first slide to trigger backup
+  if (body.slides?.length) {
+    const slide = db.prepare('SELECT presentation_id FROM slides WHERE id = ?').get(body.slides[0].id) as any
+    if (slide) saveBackup(slide.presentation_id)
+  }
+
   return { success: true }
 })

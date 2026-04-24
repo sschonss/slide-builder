@@ -1,4 +1,5 @@
 import { getDb } from '../../utils/db'
+import { saveBackup } from '../../utils/backup'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -20,6 +21,7 @@ export default defineEventHandler(async (event) => {
   const slide = db.prepare('SELECT presentation_id FROM slides WHERE id = ?').get(id) as any
   if (slide) {
     db.prepare("UPDATE presentations SET updated_at = datetime('now') WHERE id = ?").run(slide.presentation_id)
+    saveBackup(slide.presentation_id)
   }
 
   return { success: true }
