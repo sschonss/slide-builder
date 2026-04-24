@@ -31,5 +31,8 @@ export default defineEventHandler(async (event) => {
   db.prepare("UPDATE presentations SET updated_at = datetime('now') WHERE id = ?").run(body.presentation_id)
   saveBackup(body.presentation_id)
 
+  const { logChange } = await import('../../utils/changelog')
+  logChange(body.presentation_id, 'add', `Adicionou slide ${order + 1} (${template})`)
+
   return { id, presentation_id: body.presentation_id, order, template, data, notes: body.notes || null }
 })

@@ -49,6 +49,15 @@ export function initDb() {
       path TEXT NOT NULL,
       type TEXT NOT NULL CHECK(type IN ('image','video','logo'))
     );
+
+    CREATE TABLE IF NOT EXISTS change_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE,
+      action TEXT NOT NULL,
+      description TEXT NOT NULL,
+      slide_hash TEXT,
+      created_at DATETIME NOT NULL DEFAULT (datetime('now'))
+    );
   `)
 
   // Seed default theme

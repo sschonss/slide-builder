@@ -17,7 +17,11 @@ export default defineEventHandler(async (event) => {
   // Get presentation_id from first slide to trigger backup
   if (body.slides?.length) {
     const slide = db.prepare('SELECT presentation_id FROM slides WHERE id = ?').get(body.slides[0].id) as any
-    if (slide) saveBackup(slide.presentation_id)
+    if (slide) {
+      saveBackup(slide.presentation_id)
+      const { logChange } = await import('../../utils/changelog')
+      logChange(slide.presentation_id, 'reorder', `Reordenou ${body.slides.length} slides`)
+    }
   }
 
   return { success: true }

@@ -130,6 +130,9 @@ async function handleExport() {
       @close="showThemeEditor = false"
       @saved="refresh()"
     />
+
+    <!-- Git-style Change Log -->
+    <EditorChangeLog :presentation-id="presentationId" />
   </div>
 </template>
 

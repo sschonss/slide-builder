@@ -1,11 +1,12 @@
 import { getDb } from '../../utils/db'
 import { saveBackup } from '../../utils/backup'
+import { logChange } from '../../utils/changelog'
 
 export default defineEventHandler((event) => {
   const id = getRouterParam(event, 'id')
   const db = getDb()
 
-  const slide = db.prepare('SELECT presentation_id FROM slides WHERE id = ?').get(id) as any
+  const slide = db.prepare('SELECT presentation_id, "order", template FROM slides WHERE id = ?').get(id) as any
   db.prepare('DELETE FROM slides WHERE id = ?').run(id)
 
   if (slide) {
@@ -18,6 +19,7 @@ export default defineEventHandler((event) => {
 
     db.prepare("UPDATE presentations SET updated_at = datetime('now') WHERE id = ?").run(slide.presentation_id)
     saveBackup(slide.presentation_id)
+    logChange(slide.presentation_id, 'delete', `Removeu slide ${slide.order + 1} (${slide.template})`)
   }
 
   return { success: true }
