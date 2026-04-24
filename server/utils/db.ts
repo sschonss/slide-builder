@@ -56,6 +56,7 @@ export function initDb() {
       action TEXT NOT NULL,
       description TEXT NOT NULL,
       slide_hash TEXT,
+      snapshot TEXT,
       created_at DATETIME NOT NULL DEFAULT (datetime('now'))
     );
   `)

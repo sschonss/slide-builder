@@ -1,30 +1,49 @@
 import { getDb } from './db'
 import { createHash } from 'crypto'
 
-type ChangeAction = 'add' | 'edit' | 'delete' | 'reorder'
+type ChangeAction = 'add' | 'edit' | 'delete' | 'reorder' | 'revert'
 
-const MAX_LOG_ENTRIES = 50
+function captureSnapshot(presentationId: string): string | null {
+  try {
+    const db = getDb()
+    const presentation = db.prepare('SELECT * FROM presentations WHERE id = ?').get(presentationId) as any
+    if (!presentation) return null
+
+    const slides = db.prepare(
+      'SELECT * FROM slides WHERE presentation_id = ? ORDER BY "order" ASC'
+    ).all(presentationId) as any[]
+
+    const theme = db.prepare('SELECT * FROM themes WHERE id = ?').get(presentation.theme_id) as any
+
+    return JSON.stringify({
+      presentation: { title: presentation.title },
+      theme: theme ? { name: theme.name, config: JSON.parse(theme.config) } : null,
+      slides: slides.map(s => ({
+        order: s.order,
+        template: s.template,
+        data: JSON.parse(s.data),
+        notes: s.notes || null,
+      })),
+    })
+  } catch {
+    return null
+  }
+}
 
 export function logChange(presentationId: string, action: ChangeAction, description: string) {
   try {
     const db = getDb()
 
-    // Generate a short hash from timestamp + action (git-style)
     const hash = createHash('sha1')
       .update(`${Date.now()}-${action}-${description}`)
       .digest('hex')
       .substring(0, 7)
 
-    db.prepare(
-      'INSERT INTO change_log (presentation_id, action, description, slide_hash) VALUES (?, ?, ?, ?)'
-    ).run(presentationId, action, description, hash)
+    const snapshot = captureSnapshot(presentationId)
 
-    // Keep only last N entries per presentation
-    db.prepare(`
-      DELETE FROM change_log WHERE presentation_id = ? AND id NOT IN (
-        SELECT id FROM change_log WHERE presentation_id = ? ORDER BY id DESC LIMIT ?
-      )
-    `).run(presentationId, presentationId, MAX_LOG_ENTRIES)
+    db.prepare(
+      'INSERT INTO change_log (presentation_id, action, description, slide_hash, snapshot) VALUES (?, ?, ?, ?, ?)'
+    ).run(presentationId, action, description, hash, snapshot)
   } catch {
     // Change log failure should never break the main operation
   }

@@ -132,7 +132,7 @@ async function handleExport() {
     />
 
     <!-- Git-style Change Log -->
-    <EditorChangeLog :presentation-id="presentationId" />
+    <EditorChangeLog :presentation-id="presentationId" @reverted="refresh(); currentSlideIndex = 0" />
   </div>
 </template>
 

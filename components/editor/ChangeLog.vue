@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { GitCommitHorizontal, Clock, ChevronUp, ChevronDown, FilePlus, FileEdit, Trash2, ArrowUpDown } from 'lucide-vue-next'
+import { GitCommitHorizontal, Clock, ChevronUp, ChevronDown, FilePlus, FileEdit, Trash2, ArrowUpDown, RotateCcw, History } from 'lucide-vue-next'
 
 const props = defineProps<{ presentationId: string }>()
+const emit = defineEmits<{ (e: 'reverted'): void }>()
 
 interface ChangeEntry {
   action: string
   description: string
   slide_hash: string
   created_at: string
+  has_snapshot: number
 }
 
 const expanded = ref(false)
+const reverting = ref<string | null>(null)
 const changes = ref<ChangeEntry[]>([])
 
 const { data, refresh } = useFetch<ChangeEntry[]>(`/api/presentations/${props.presentationId}/changes`)
@@ -32,6 +35,7 @@ const actionIcon = (action: string) => {
     case 'edit': return FileEdit
     case 'delete': return Trash2
     case 'reorder': return ArrowUpDown
+    case 'revert': return RotateCcw
     default: return GitCommitHorizontal
   }
 }
@@ -42,6 +46,7 @@ const actionColor = (action: string) => {
     case 'edit': return '#d29922'
     case 'delete': return '#f85149'
     case 'reorder': return '#58a6ff'
+    case 'revert': return '#bc8cff'
     default: return '#8b949e'
   }
 }
@@ -62,8 +67,25 @@ function timeAgo(dateStr: string): string {
   return `${days}d atrás`
 }
 
+async function revertTo(hash: string) {
+  if (!confirm(`Reverter para ${hash}? Os slides atuais serão substituídos.`)) return
+
+  reverting.value = hash
+  try {
+    await $fetch(`/api/presentations/${props.presentationId}/revert`, {
+      method: 'POST',
+      body: { hash },
+    })
+    await refresh()
+    emit('reverted')
+  } catch (err: any) {
+    alert('Erro ao reverter: ' + (err.data?.message || err.message))
+  } finally {
+    reverting.value = null
+  }
+}
+
 const lastChange = computed(() => changes.value[0] || null)
-const visibleChanges = computed(() => changes.value.slice(0, 3))
 </script>
 
 <template>
@@ -82,7 +104,10 @@ const visibleChanges = computed(() => changes.value.slice(0, 3))
         <span v-else class="no-changes">Nenhuma alteração registrada</span>
       </div>
       <div class="bar-right">
-        <span class="changes-count" v-if="changes.length">{{ changes.length }} alterações</span>
+        <span class="changes-count" v-if="changes.length">
+          <History :size="11" />
+          {{ changes.length }}
+        </span>
         <component :is="expanded ? ChevronDown : ChevronUp" :size="13" />
       </div>
     </div>
@@ -91,7 +116,7 @@ const visibleChanges = computed(() => changes.value.slice(0, 3))
       <div class="changelog-panel" v-if="expanded">
         <div class="commit-list">
           <div
-            v-for="(change, i) in visibleChanges"
+            v-for="(change, i) in changes"
             :key="i"
             class="commit-entry"
           >
@@ -100,13 +125,22 @@ const visibleChanges = computed(() => changes.value.slice(0, 3))
               <div class="commit-dot" :style="{ borderColor: actionColor(change.action) }">
                 <component :is="actionIcon(change.action)" :size="10" :color="actionColor(change.action)" />
               </div>
-              <div class="commit-line-bottom" v-if="i < visibleChanges.length - 1"></div>
+              <div class="commit-line-bottom" v-if="i < changes.length - 1"></div>
             </div>
             <div class="commit-info">
               <span class="commit-desc">{{ change.description }}</span>
               <div class="commit-meta">
                 <code class="commit-hash">{{ change.slide_hash }}</code>
                 <span class="commit-time">{{ timeAgo(change.created_at) }}</span>
+                <button
+                  v-if="change.has_snapshot && i > 0"
+                  class="revert-btn"
+                  :disabled="reverting !== null"
+                  @click.stop="revertTo(change.slide_hash)"
+                >
+                  <RotateCcw :size="10" :class="{ spinning: reverting === change.slide_hash }" />
+                  {{ reverting === change.slide_hash ? '...' : 'reverter' }}
+                </button>
               </div>
             </div>
           </div>
@@ -269,6 +303,41 @@ const visibleChanges = computed(() => changes.value.slice(0, 3))
 .commit-time {
   font-size: 10px;
   color: #484f58;
+}
+
+.revert-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all 0.15s;
+}
+
+.revert-btn:hover {
+  color: #bc8cff;
+  border-color: #bc8cff;
+  background: rgba(188, 140, 255, 0.1);
+}
+
+.revert-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
 }
 
 .empty-state {

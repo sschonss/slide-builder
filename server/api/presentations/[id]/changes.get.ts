@@ -5,11 +5,11 @@ export default defineEventHandler((event) => {
   const db = getDb()
 
   const changes = db.prepare(`
-    SELECT action, description, slide_hash, created_at
+    SELECT action, description, slide_hash, created_at,
+           CASE WHEN snapshot IS NOT NULL THEN 1 ELSE 0 END as has_snapshot
     FROM change_log
     WHERE presentation_id = ?
     ORDER BY id DESC
-    LIMIT 10
   `).all(id)
 
   return changes
