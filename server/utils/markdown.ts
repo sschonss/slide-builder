@@ -83,6 +83,8 @@ function generateDiagram(slide: Slide): string {
 
   if (data.diagram_type === 'mermaid' && data.mermaid_code) {
     lines.push('```mermaid', data.mermaid_code, '```')
+  } else if (data.diagram_type === 'excalidraw' && data.image) {
+    lines.push(`![${data.caption || ''}](${data.image})`)
   } else if (data.diagram_type === 'image' && data.image) {
     lines.push(`![${data.caption || ''}](${data.image})`)
   } else if (data.diagram_type === 'embed' && data.embed_url) {

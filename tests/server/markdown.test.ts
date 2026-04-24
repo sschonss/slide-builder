@@ -94,4 +94,20 @@ describe('generateMarkdown', () => {
     expect(md).toContain('<!--')
     expect(md).toContain('Remember to mention X')
   })
+
+  it('generates excalidraw diagram slide with image path', () => {
+    const slides: Slide[] = [{
+      id: '1', presentation_id: 'p1', order: 0, template: 'diagram',
+      data: {
+        title: 'System Architecture',
+        diagram_type: 'excalidraw',
+        image: './assets/excalidraw-1.svg',
+        caption: 'Overview',
+      },
+    }]
+    const md = generateMarkdown('Test', slides, theme)
+    expect(md).toContain('layout: center')
+    expect(md).toContain('# System Architecture')
+    expect(md).toContain('![Overview](./assets/excalidraw-1.svg)')
+  })
 })

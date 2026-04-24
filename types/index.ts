@@ -23,11 +23,13 @@ export interface ContentData {
 
 export interface DiagramData {
   title: string
-  diagram_type: 'mermaid' | 'image' | 'embed'
+  diagram_type: 'mermaid' | 'image' | 'embed' | 'excalidraw'
   mermaid_code?: string
   image?: string
   embed_url?: string
   caption?: string
+  excalidraw_scene?: string
+  excalidraw_svg?: string
 }
 
 export interface CodeData {
