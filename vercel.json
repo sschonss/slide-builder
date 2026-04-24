@@ -2,6 +2,8 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/auth/(.*)", "destination": "/auth/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/_nuxt/(.*)", "destination": "/_nuxt/$1" },
+    { "source": "/excalidraw-editor/(.*)", "destination": "/excalidraw-editor/$1" },
+    { "source": "/((?!api|auth|_nuxt|excalidraw-editor).*)", "destination": "/index.html" }
   ]
 }
