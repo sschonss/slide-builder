@@ -1,23 +1,14 @@
 <template>
-  <div>
-    <h1>Slide Builder</h1>
-    <p>Welcome to Slide Builder</p>
-  </div>
+  <NuxtPage />
 </template>
 
-<script setup lang="ts">
-// App setup
-</script>
-
-<style scoped>
-h1 {
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
   font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 2rem;
+  background: #0d1117;
+  color: #e6edf3;
+  min-height: 100vh;
 }
-
-p {
-  font-family: 'Inter', sans-serif;
-  font-weight: 400;
-}
+a { color: inherit; text-decoration: none; }
 </style>
