@@ -2,9 +2,15 @@ import { dbGet, dbAll } from '../../utils/db'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
+  const session = await getUserSession(event)
 
   const presentation = await dbGet('SELECT * FROM presentations WHERE id = ?', [id]) as any
   if (!presentation) throw createError({ statusCode: 404, message: 'Presentation not found' })
+
+  const isOwner = session?.user?.id && session.user.id === presentation.user_id
+  if (presentation.visibility === 'private' && !isOwner) {
+    throw createError({ statusCode: 404, message: 'Presentation not found' })
+  }
 
   const slides = await dbAll(
     'SELECT * FROM slides WHERE presentation_id = ? ORDER BY "order" ASC',
@@ -15,6 +21,7 @@ export default defineEventHandler(async (event) => {
 
   return {
     ...presentation,
+    isOwner: !!isOwner,
     slides: slides.map(s => ({ ...s, data: JSON.parse(s.data) })),
     theme: theme ? { ...theme, config: JSON.parse(theme.config) } : null,
   }
