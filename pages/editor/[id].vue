@@ -82,12 +82,11 @@ async function handleSave() {
 }
 
 function handlePresent() {
-  const presenterUrl = `/presenter/${presentationId}`
-  const presentUrl = `/present/${presentationId}`
-  // Open presenter view (controls, notes, timer)
-  window.open(presenterUrl, 'presenter', 'width=900,height=700')
-  // Open presentation view (fullscreen slide)
-  window.open(presentUrl, 'present')
+  const presentUrl = `${window.location.origin}/present/${presentationId}`
+  // Copy audience link to clipboard
+  navigator.clipboard.writeText(presentUrl).catch(() => {})
+  // Navigate to presenter view within PWA (no window.open)
+  navigateTo(`/presenter/${presentationId}`)
 }
 
 async function handleExport() {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Slide } from '~/types'
-import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote, RefreshCw } from 'lucide-vue-next'
+import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote, RefreshCw, Cast, Link, Check, ArrowLeft } from 'lucide-vue-next'
 
 // No auth middleware — presenter page checks visibility via API
 // Private presentations return 403 for non-owners (handled by server)
@@ -18,6 +18,53 @@ const theme = computed(() => presentation.value?.theme?.config)
 const notes = computed(() => currentSlide.value?.notes || '')
 
 const { remoteIndex, init, sendIndex, destroy } = usePresenterSync(presentationId, 'presenter')
+
+// Presentation API — cast audience view to external display
+const canCast = ref(false)
+const casting = ref(false)
+let presentationConnection: any = null
+
+function checkCastSupport() {
+  canCast.value = typeof PresentationRequest !== 'undefined'
+}
+
+async function startCast() {
+  if (!canCast.value) return
+  try {
+    const url = `${window.location.origin}/present/${presentationId}`
+    const request = new PresentationRequest([url])
+    presentationConnection = await request.start()
+    casting.value = true
+    presentationConnection.onclose = () => { casting.value = false }
+    presentationConnection.onterminate = () => { casting.value = false }
+  } catch {
+    // User cancelled or not supported
+  }
+}
+
+function stopCast() {
+  if (presentationConnection) {
+    presentationConnection.terminate()
+    presentationConnection = null
+    casting.value = false
+  }
+}
+
+// Copy audience link
+const linkCopied = ref(false)
+const audienceUrl = computed(() => `${window.location.origin}/present/${presentationId}`)
+
+async function copyAudienceLink() {
+  try {
+    await navigator.clipboard.writeText(audienceUrl.value)
+    linkCopied.value = true
+    setTimeout(() => { linkCopied.value = false }, 2000)
+  } catch {}
+}
+
+function goBack() {
+  navigateTo(`/editor/${presentationId}`)
+}
 
 // Timer
 const elapsed = ref(0)
@@ -91,12 +138,14 @@ function handleKeydown(e: KeyboardEvent) {
 onMounted(() => {
   initCache()
   init()
+  checkCastSupport()
   startTimer()
   window.addEventListener('keydown', handleKeydown)
 })
 
 onUnmounted(() => {
   destroy()
+  stopCast()
   pauseTimer()
   window.removeEventListener('keydown', handleKeydown)
 })
@@ -127,6 +176,9 @@ onUnmounted(() => {
 
     <!-- Middle: Controls -->
     <div class="controls-row">
+      <button @click="goBack" class="ctrl-btn back-btn" title="Voltar ao editor">
+        <ArrowLeft :size="16" />
+      </button>
       <div class="timer" :class="{ paused: !timerRunning }">
         <Timer :size="22" /> {{ timerDisplay }}
       </div>
@@ -135,13 +187,21 @@ onUnmounted(() => {
         <span class="slide-count">{{ currentSlideIndex + 1 }} / {{ slides.length }}</span>
         <button @click="next" :disabled="currentSlideIndex >= slides.length - 1" class="nav-btn"><ChevronRight :size="18" /></button>
       </div>
-      <div class="timer-controls">
+      <div class="action-controls">
         <button @click="toggleTimer" class="ctrl-btn"><component :is="timerRunning ? Pause : Play" :size="16" /></button>
         <button @click="resetTimer" class="ctrl-btn"><RotateCcw :size="16" /></button>
+        <button @click="forceSync" class="ctrl-btn sync-btn" :class="{ spinning: syncing }" title="Sincronizar dados do servidor">
+          <RefreshCw :size="16" />
+        </button>
+        <button @click="copyAudienceLink" class="ctrl-btn link-btn" :class="{ copied: linkCopied }" :title="linkCopied ? 'Link copiado!' : 'Copiar link da apresentação'">
+          <component :is="linkCopied ? Check : Link" :size="16" />
+          <span class="link-label">{{ linkCopied ? 'Copiado!' : 'Link' }}</span>
+        </button>
+        <button v-if="canCast" @click="casting ? stopCast() : startCast()" class="ctrl-btn cast-btn" :class="{ active: casting }" :title="casting ? 'Parar transmissão' : 'Transmitir para tela externa'">
+          <Cast :size="16" />
+          <span class="cast-label">{{ casting ? 'Parar' : 'Transmitir' }}</span>
+        </button>
       </div>
-      <button @click="forceSync" class="ctrl-btn sync-btn" :class="{ spinning: syncing }" title="Sincronizar dados do servidor">
-        <RefreshCw :size="16" />
-      </button>
     </div>
 
     <!-- Bottom: Notes -->
@@ -236,6 +296,11 @@ onUnmounted(() => {
   border-bottom: 1px solid #30363d;
   background: #161b22;
   flex-shrink: 0;
+  gap: 12px;
+}
+
+.back-btn {
+  flex-shrink: 0;
 }
 
 .timer {
@@ -284,7 +349,7 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
-.timer-controls {
+.action-controls {
   display: flex;
   gap: 8px;
 }
@@ -309,6 +374,35 @@ onUnmounted(() => {
 }
 .sync-btn.spinning :deep(svg) {
   animation: spin 1s linear infinite;
+}
+.link-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.link-btn.copied {
+  background: rgba(63, 185, 80, 0.15);
+  border-color: #3fb950;
+  color: #3fb950;
+}
+.link-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+.cast-btn {
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cast-btn.active {
+  background: rgba(88, 166, 255, 0.15);
+  border-color: #58a6ff;
+  color: #58a6ff;
+}
+.cast-label {
+  font-size: 12px;
+  font-weight: 600;
 }
 @keyframes spin {
   from { transform: rotate(0deg); }
