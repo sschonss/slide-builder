@@ -174,69 +174,12 @@ onUnmounted(() => {
   line-height: 2;
 }
 
-.slide-container :deep(.diagram-slide) {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-}
-
-.slide-container :deep(.diagram-placeholder) {
-  margin-top: 1vw;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: 0;
-}
-
 .slide-container :deep(.mermaid-rendered) {
   max-height: none;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .slide-container :deep(.mermaid-rendered svg) {
-  max-width: 85vw;
-  max-height: 65vh;
-  width: auto !important;
-  height: auto !important;
-}
-
-.slide-container :deep(.excalidraw-preview) {
-  max-height: none;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.slide-container :deep(.excalidraw-preview svg) {
-  max-width: 85vw;
-  max-height: 65vh;
-  width: auto !important;
-  height: auto !important;
-}
-
-.slide-container :deep(.placeholder-text) {
-  font-size: 3vw;
-}
-
-.slide-container :deep(.caption) {
-  font-size: 1.1vw;
-}
-
-.slide-container :deep(.mermaid-preview) {
-  font-size: 1.2vw;
-  max-height: 60vh;
-  padding: 2vw;
+  max-height: 70vh;
 }
 
 .slide-counter {
