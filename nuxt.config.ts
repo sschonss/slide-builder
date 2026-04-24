@@ -2,7 +2,46 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: true },
   ssr: false,
-  modules: ['nuxt-auth-utils'],
+  modules: ['nuxt-auth-utils', '@vite-pwa/nuxt'],
+  pwa: {
+    registerType: 'autoUpdate',
+    manifest: {
+      name: 'Slide Builder',
+      short_name: 'SlideBuilder',
+      description: 'Crie apresentações profissionais no browser',
+      theme_color: '#0d1117',
+      background_color: '#0d1117',
+      display: 'standalone',
+      orientation: 'any',
+      icons: [
+        { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+        { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+        { src: 'maskable-icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ],
+    },
+    workbox: {
+      navigateFallback: '/',
+      globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+          handler: 'CacheFirst',
+          options: { cacheName: 'google-fonts-cache', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } },
+        },
+        {
+          urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+          handler: 'CacheFirst',
+          options: { cacheName: 'gstatic-fonts-cache', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } },
+        },
+      ],
+    },
+    client: {
+      installPrompt: true,
+    },
+    devOptions: {
+      enabled: false,
+    },
+  },
   runtimeConfig: {
     tursoUrl: '',
     tursoToken: '',
