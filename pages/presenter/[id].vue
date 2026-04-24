@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Slide } from '~/types'
-import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote, RefreshCw, Cast, Link, Check, ArrowLeft, ShieldAlert } from 'lucide-vue-next'
+import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote, RefreshCw, Cast, Link, Check, ArrowLeft, ShieldAlert, ZoomIn, ZoomOut } from 'lucide-vue-next'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -17,7 +17,26 @@ const nextSlide = computed(() => slides.value[currentSlideIndex.value + 1] || nu
 const theme = computed(() => presentation.value?.theme?.config)
 const notes = computed(() => currentSlide.value?.notes || '')
 
-const { remoteIndex, init, sendIndex, destroy } = usePresenterSync(presentationId, 'presenter')
+const { remoteIndex, remoteZoom, init, sendIndex, sendZoom, destroy } = usePresenterSync(presentationId, 'presenter')
+
+// Zoom controls
+const zoomLevel = ref(1)
+const zoomPercent = computed(() => Math.round(zoomLevel.value * 100))
+
+function zoomIn() {
+  zoomLevel.value = Math.min(3, +(zoomLevel.value + 0.1).toFixed(1))
+  sendZoom(zoomLevel.value)
+}
+
+function zoomOut() {
+  zoomLevel.value = Math.max(0.5, +(zoomLevel.value - 0.1).toFixed(1))
+  sendZoom(zoomLevel.value)
+}
+
+function resetZoom() {
+  zoomLevel.value = 1
+  sendZoom(1)
+}
 
 // Presentation API — cast audience view to external display
 const canCast = ref(false)
@@ -194,6 +213,11 @@ onUnmounted(() => {
         <button @click="next" :disabled="currentSlideIndex >= slides.length - 1" class="nav-btn"><ChevronRight :size="18" /></button>
       </div>
       <div class="action-controls">
+        <div class="zoom-controls">
+          <button @click="zoomOut" class="ctrl-btn" :disabled="zoomLevel <= 0.5" title="Diminuir zoom"><ZoomOut :size="16" /></button>
+          <button @click="resetZoom" class="zoom-label" :title="'Zoom: ' + zoomPercent + '%'">{{ zoomPercent }}%</button>
+          <button @click="zoomIn" class="ctrl-btn" :disabled="zoomLevel >= 3" title="Aumentar zoom"><ZoomIn :size="16" /></button>
+        </div>
         <button @click="toggleTimer" class="ctrl-btn"><component :is="timerRunning ? Pause : Play" :size="16" /></button>
         <button @click="resetTimer" class="ctrl-btn"><RotateCcw :size="16" /></button>
         <button @click="forceSync" class="ctrl-btn sync-btn" :class="{ spinning: syncing }" title="Sincronizar dados do servidor">
@@ -409,6 +433,27 @@ onUnmounted(() => {
 .cast-label {
   font-size: 12px;
   font-weight: 600;
+}
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+.zoom-label {
+  background: none;
+  border: none;
+  color: #8b949e;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  min-width: 42px;
+  text-align: center;
+  cursor: pointer;
+  padding: 4px;
+}
+.zoom-label:hover {
+  color: #e6edf3;
 }
 @keyframes spin {
   from { transform: rotate(0deg); }

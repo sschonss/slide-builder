@@ -12,7 +12,12 @@ const slides = computed(() => presentation.value?.slides || [])
 const currentSlide = computed(() => slides.value[currentSlideIndex.value])
 const theme = computed(() => presentation.value?.theme?.config)
 
-const { remoteIndex, init, sendIndex, destroy } = usePresenterSync(presentationId, 'audience')
+const { remoteIndex, remoteZoom, init, sendIndex, destroy } = usePresenterSync(presentationId, 'audience')
+
+const zoomStyle = computed(() => ({
+  transform: `scale(${remoteZoom.value})`,
+  transformOrigin: 'center center',
+}))
 
 function goTo(index: number) {
   if (index < 0 || index >= slides.value.length) return
@@ -72,7 +77,7 @@ onUnmounted(() => {
     <div class="loading-spinner"></div>
   </div>
   <div class="present-view" v-else @click="next">
-    <div class="slide-container" v-if="currentSlide">
+    <div class="slide-container" v-if="currentSlide" :style="zoomStyle">
       <EditorSlidePreview :slide="currentSlide" :theme="theme" />
     </div>
     <div class="slide-counter">{{ currentSlideIndex + 1 }} / {{ slides.length }}</div>
@@ -105,6 +110,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   padding: 0;
+  transition: transform 0.3s ease;
 }
 
 .slide-container :deep(.preview-wrapper) {

@@ -1,5 +1,6 @@
 type Message =
   | { type: 'navigate'; index: number }
+  | { type: 'zoom'; level: number }
   | { type: 'sync-request' }
 
 type SyncRole = 'presenter' | 'audience'
@@ -8,17 +9,20 @@ export function usePresenterSync(presentationId: string, role: SyncRole = 'audie
   const channelName = `presenter-${presentationId}`
   const channel = ref<BroadcastChannel | null>(null)
   const remoteIndex = ref(-1)
+  const remoteZoom = ref(1)
   let pollTimer: ReturnType<typeof setInterval> | null = null
   let lastUpdatedAt: string | null = null
 
   function init() {
     if (import.meta.server) return
 
-    // BroadcastChannel for same-device instant sync
     channel.value = new BroadcastChannel(channelName)
     channel.value.onmessage = (ev: MessageEvent<Message>) => {
       if (ev.data.type === 'navigate') {
         remoteIndex.value = ev.data.index
+      }
+      if (ev.data.type === 'zoom') {
+        remoteZoom.value = ev.data.level
       }
       if (ev.data.type === 'sync-request' && role === 'presenter') {
         if (remoteIndex.value >= 0) {
@@ -27,41 +31,49 @@ export function usePresenterSync(presentationId: string, role: SyncRole = 'audie
       }
     }
 
-    // Server-side polling for cross-device sync (audience only)
     if (role === 'audience') {
       pollTimer = setInterval(pollSync, 1000)
-      pollSync() // immediate first poll
+      pollSync()
     }
   }
 
   async function pollSync() {
     try {
-      const data = await $fetch<{ slideIndex: number; updatedAt: string | null }>(
+      const data = await $fetch<{ slideIndex: number; zoomLevel: number; updatedAt: string | null }>(
         `/api/sync/${presentationId}`
       )
       if (data.updatedAt && data.updatedAt !== lastUpdatedAt) {
         lastUpdatedAt = data.updatedAt
         remoteIndex.value = data.slideIndex
+        remoteZoom.value = data.zoomLevel
       }
-    } catch {
-      // Silently ignore poll errors — will retry on next interval
-    }
+    } catch {}
   }
 
   async function sendIndex(index: number) {
-    // Local BroadcastChannel (instant, same-device)
     channel.value?.postMessage({ type: 'navigate', index })
 
-    // Server sync (cross-device, presenter only)
     if (role === 'presenter') {
       try {
         await $fetch(`/api/sync/${presentationId}`, {
           method: 'POST',
           body: { slideIndex: index },
         })
-      } catch {
-        // Non-critical — BroadcastChannel still works locally
-      }
+      } catch {}
+    }
+  }
+
+  async function sendZoom(level: number) {
+    remoteZoom.value = level
+    channel.value?.postMessage({ type: 'zoom', level })
+
+    if (role === 'presenter') {
+      try {
+        await $fetch(`/api/sync/${presentationId}`, {
+          method: 'POST',
+          body: { zoomLevel: level },
+        })
+      } catch {}
     }
   }
 
@@ -81,5 +93,5 @@ export function usePresenterSync(presentationId: string, role: SyncRole = 'audie
     }
   }
 
-  return { remoteIndex, init, sendIndex, requestSync, destroy }
+  return { remoteIndex, remoteZoom, init, sendIndex, sendZoom, requestSync, destroy }
 }

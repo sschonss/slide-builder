@@ -50,6 +50,7 @@ async function _initDbInternal() {
     for (const sql of [
       `ALTER TABLE presentations ADD COLUMN user_id TEXT REFERENCES users(id)`,
       `ALTER TABLE presentations ADD COLUMN visibility TEXT NOT NULL DEFAULT 'private' CHECK(visibility IN ('public', 'private'))`,
+      `ALTER TABLE presenter_sync ADD COLUMN zoom_level REAL NOT NULL DEFAULT 1`,
     ]) {
       try {
         await client.execute({ sql, args: [] })
