@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { VueDraggable } from 'vue-draggable-plus'
+import { GripVertical } from 'lucide-vue-next'
 import type { Slide } from '~/types'
 
 const props = defineProps<{ slides: Slide[]; currentIndex: number }>()
@@ -37,7 +38,7 @@ const TEMPLATE_COLORS: Record<string, string> = {
       <span class="label">Slides ({{ slides.length }})</span>
     </div>
 
-    <VueDraggable v-model="localSlides" @end="onDragEnd" class="slides" handle=".slide-item">
+    <VueDraggable v-model="localSlides" @end="onDragEnd" class="slides" handle=".drag-handle" :delay="200" :delayOnTouchOnly="true" :touchStartThreshold="8">
       <div
         v-for="(slide, i) in localSlides"
         :key="slide.id"
@@ -45,10 +46,15 @@ const TEMPLATE_COLORS: Record<string, string> = {
         :class="{ active: i === currentIndex }"
         @click="emit('select', i)"
       >
-        <div class="slide-type" :style="{ color: TEMPLATE_COLORS[slide.template] }">
-          {{ i + 1 }} · {{ slide.template.toUpperCase() }}
+        <div class="drag-handle" @click.stop>
+          <GripVertical :size="14" />
         </div>
-        <div class="slide-title">{{ (slide.data as any).title || '(sem título)' }}</div>
+        <div class="slide-info">
+          <div class="slide-type" :style="{ color: TEMPLATE_COLORS[slide.template] }">
+            {{ i + 1 }} · {{ slide.template.toUpperCase() }}
+          </div>
+          <div class="slide-title">{{ (slide.data as any).title || '(sem título)' }}</div>
+        </div>
         <button v-if="slides.length > 1" class="delete-btn" @click.stop="emit('delete', slide.id)">×</button>
       </div>
     </VueDraggable>
@@ -63,14 +69,17 @@ const TEMPLATE_COLORS: Record<string, string> = {
 .slide-list { padding: 8px; display: flex; flex-direction: column; height: 100%; }
 .header { padding: 4px 4px 8px; }
 .label { font-size: 10px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
-.slides { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-.slide-item { background: #161b22; border: 1px solid #30363d; border-radius: 4px; padding: 8px; cursor: pointer; position: relative; }
+.slides { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; -webkit-overflow-scrolling: touch; padding-bottom: 60px; }
+.slide-item { background: #161b22; border: 1px solid #30363d; border-radius: 4px; padding: 8px; cursor: pointer; position: relative; display: flex; align-items: flex-start; gap: 6px; }
 .slide-item.active { border-color: #e94560; background: #1c2333; }
 .slide-item:hover .delete-btn { opacity: 0.6; }
+.drag-handle { color: #484f58; cursor: grab; padding: 2px 0; flex-shrink: 0; touch-action: none; }
+.drag-handle:active { cursor: grabbing; color: #8b949e; }
+.slide-info { flex: 1; min-width: 0; }
 .slide-type { font-size: 9px; font-weight: 600; letter-spacing: 0.5px; }
 .slide-title { font-size: 11px; color: #e6edf3; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .delete-btn { position: absolute; top: 4px; right: 4px; background: none; border: none; color: #f85149; font-size: 14px; cursor: pointer; opacity: 0; padding: 2px 4px; }
 .delete-btn:hover { opacity: 1 !important; }
-.add-btn { background: none; border: 1px dashed #30363d; border-radius: 4px; padding: 10px; color: #8b949e; cursor: pointer; font-size: 12px; margin-top: 4px; }
+.add-btn { background: none; border: 1px dashed #30363d; border-radius: 4px; padding: 10px; color: #8b949e; cursor: pointer; font-size: 12px; margin-top: 4px; flex-shrink: 0; }
 .add-btn:hover { border-color: #e94560; color: #e94560; }
 </style>
