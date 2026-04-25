@@ -7,12 +7,16 @@ export function useExportPdf() {
     progress.value = 'Preparando slides...'
 
     try {
-      const [html2canvasModule, jsPDFModule] = await Promise.all([
+      const [html2canvasModule, jsPDFModule, mermaidModule] = await Promise.all([
         import('html2canvas-pro'),
         import('jspdf'),
+        import('mermaid'),
       ])
       const html2canvas = html2canvasModule.default
       const { jsPDF } = jsPDFModule
+      const mermaid = mermaidModule.default
+
+      mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' })
 
       // Fetch presentation data
       const presentation = await $fetch(`/api/presentations/${presentationId}`) as any
@@ -22,6 +26,24 @@ export function useExportPdf() {
       if (!slides.length) {
         alert('Nenhum slide para exportar')
         return
+      }
+
+      // Pre-render mermaid diagrams
+      progress.value = 'Renderizando diagramas...'
+      const diagramSvgs: Record<number, string> = {}
+      for (let i = 0; i < slides.length; i++) {
+        const slide = slides[i]
+        if (slide.template !== 'diagram') continue
+        const data = typeof slide.data === 'string' ? JSON.parse(slide.data) : slide.data
+        if (data.diagram_type === 'mermaid' && data.mermaid_code?.trim()) {
+          try {
+            const id = `pdf-mermaid-${i}-${Date.now()}`
+            const { svg } = await mermaid.render(id, data.mermaid_code)
+            diagramSvgs[i] = svg
+          } catch {}
+        } else if (data.diagram_type === 'excalidraw' && data.excalidraw_svg) {
+          diagramSvgs[i] = data.excalidraw_svg
+        }
       }
 
       // Create offscreen container
@@ -39,12 +61,12 @@ export function useExportPdf() {
         slideEl.style.cssText = `width:960px;height:540px;background:${theme?.colors?.background || '#1a1a2e'};color:${theme?.colors?.text || '#ffffff'};display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;padding:48px;box-sizing:border-box;`
 
         const slide = slides[i]
-        slideEl.innerHTML = renderSlideHtml(slide, theme)
+        slideEl.innerHTML = renderSlideHtml(slide, theme, diagramSvgs[i])
         container.innerHTML = ''
         container.appendChild(slideEl)
 
-        // Wait for fonts/images
-        await new Promise(r => setTimeout(r, 100))
+        // Wait for rendering
+        await new Promise(r => setTimeout(r, 200))
 
         const canvas = await html2canvas(slideEl, {
           width: 960,
@@ -75,7 +97,7 @@ export function useExportPdf() {
   return { exporting, progress, exportToPdf }
 }
 
-function renderSlideHtml(slide: any, theme: any): string {
+function renderSlideHtml(slide: any, theme: any, diagramSvg?: string): string {
   const primary = theme?.colors?.primary || '#e94560'
   const data = typeof slide.data === 'string' ? JSON.parse(slide.data) : slide.data
 
@@ -131,7 +153,11 @@ function renderSlideHtml(slide: any, theme: any): string {
       return `
         <div style="width:100%;text-align:center;">
           <h1 style="font-size:24px;font-weight:700;color:${primary};margin-bottom:16px;">${esc(data.title || '')}</h1>
-          <p style="font-size:16px;opacity:0.7;">[Diagrama - visível na apresentação]</p>
+          ${diagramSvg
+            ? `<div style="display:flex;align-items:center;justify-content:center;max-height:380px;overflow:hidden;">${diagramSvg}</div>`
+            : `<p style="font-size:16px;opacity:0.7;">[Diagrama]</p>`
+          }
+          ${data.caption ? `<p style="font-size:12px;opacity:0.5;margin-top:8px;">${esc(data.caption)}</p>` : ''}
         </div>`
 
     default:
