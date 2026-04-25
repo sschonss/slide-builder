@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Play, Download, Save, Palette, ChevronLeft, ChevronRight, ChevronDown, FileText, Package, Loader2 } from 'lucide-vue-next'
 
-const props = defineProps<{ title: string; slideIndex: number; totalSlides: number; presentationId: string }>()
+const props = defineProps<{ title: string; slideIndex: number; totalSlides: number; presentationId: string; hasUnsavedChanges?: boolean }>()
 const emit = defineEmits<{
   (e: 'present'): void
   (e: 'openTheme'): void
@@ -73,10 +73,10 @@ async function downloadBundle() {
       <button class="nav-btn" @click="emit('navigate', 'next')" :disabled="slideIndex >= totalSlides - 1"><ChevronRight :size="14" /></button>
     </div>
     <div class="toolbar-right">
-      <button class="btn btn-save" @click="handleSave" :disabled="saving">
+      <button class="btn btn-save" :class="{ 'has-changes': hasUnsavedChanges }" @click="handleSave" :disabled="saving">
         <Loader2 v-if="saving" :size="13" class="spin" />
         <Save v-else :size="13" />
-        {{ saving ? 'Salvando...' : 'Salvar' }}
+        {{ saving ? 'Salvando...' : hasUnsavedChanges ? 'Salvar *' : 'Salvar' }}
       </button>
       <button class="btn" @click="emit('present')"><Play :size="13" /> Apresentar</button>
       <div class="dropdown">
@@ -119,6 +119,9 @@ async function downloadBundle() {
 .btn:disabled, .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .btn-save { background: #238636; border-color: #238636; }
 .btn-save:hover { background: #2ea043; }
+.btn-save.has-changes { background: #da3633; border-color: #da3633; animation: pulse-save 2s ease-in-out infinite; }
+.btn-save.has-changes:hover { background: #f85149; }
+@keyframes pulse-save { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .dropdown { position: relative; }

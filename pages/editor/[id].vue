@@ -11,7 +11,16 @@ const { data: presentation, refresh } = useFetch(`/api/presentations/${presentat
 const currentSlideIndex = ref(0)
 const showThemeEditor = ref(false)
 
-const slides = computed(() => presentation.value?.slides || [])
+const localEdits = ref<Record<string, Partial<Slide>>>({})
+
+const slides = computed(() => {
+  const base = presentation.value?.slides || []
+  return base.map(s => {
+    const edits = localEdits.value[s.id]
+    if (!edits) return s
+    return { ...s, ...edits, data: edits.data ?? s.data, notes: edits.notes ?? s.notes }
+  })
+})
 const currentSlide = computed(() => slides.value[currentSlideIndex.value])
 
 function navigateSlide(direction: 'prev' | 'next') {
@@ -35,18 +44,16 @@ async function addSlide(template: string) {
   })
 }
 
-async function updateSlide(slideId: string, updates: Partial<Slide>) {
-  await withSaving(async () => {
-    await $fetch(`/api/slides/${slideId}`, { method: 'PUT', body: updates })
-    await refresh()
-    await regenerateMarkdown()
-  })
+function updateSlide(_slideId: string, updates: Partial<Slide>) {
+  const id = _slideId
+  localEdits.value[id] = { ...localEdits.value[id], ...updates }
 }
 
 async function deleteSlide(slideId: string) {
   if (slides.value.length <= 1) return
   await withSaving(async () => {
     await $fetch(`/api/slides/${slideId}`, { method: 'DELETE' })
+    delete localEdits.value[slideId]
     if (currentSlideIndex.value >= slides.value.length - 1) {
       currentSlideIndex.value = Math.max(0, currentSlideIndex.value - 1)
     }
@@ -70,16 +77,37 @@ async function regenerateMarkdown() {
 }
 
 async function handleSave() {
-  if (!currentSlide.value) return
-  await withSaving(async () => {
-    await $fetch(`/api/slides/${currentSlide.value.id}`, {
-      method: 'PUT',
-      body: { data: currentSlide.value.data, notes: currentSlide.value.notes, template: currentSlide.value.template },
+  const edits = { ...localEdits.value }
+  const slideIds = Object.keys(edits)
+  if (slideIds.length === 0 && currentSlide.value) {
+    // No pending edits — save current slide as before
+    await withSaving(async () => {
+      await $fetch(`/api/slides/${currentSlide.value.id}`, {
+        method: 'PUT',
+        body: { data: currentSlide.value.data, notes: currentSlide.value.notes, template: currentSlide.value.template },
+      })
+      await regenerateMarkdown()
+      await refresh()
     })
+    return
+  }
+
+  await withSaving(async () => {
+    for (const id of slideIds) {
+      const slide = slides.value.find(s => s.id === id)
+      if (!slide) continue
+      await $fetch(`/api/slides/${id}`, {
+        method: 'PUT',
+        body: { data: slide.data, notes: slide.notes, template: slide.template },
+      })
+    }
+    localEdits.value = {}
     await regenerateMarkdown()
     await refresh()
   })
 }
+
+const hasUnsavedChanges = computed(() => Object.keys(localEdits.value).length > 0)
 
 function handlePresent() {
   const presentUrl = `${window.location.origin}/present/${presentationId}`
@@ -109,6 +137,7 @@ async function handleExport() {
       :slide-index="currentSlideIndex"
       :total-slides="slides.length"
       :presentation-id="presentationId"
+      :has-unsaved-changes="hasUnsavedChanges"
       @present="handlePresent"
       @save="handleSave"
       @open-theme="showThemeEditor = true"
