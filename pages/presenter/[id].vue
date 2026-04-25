@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Slide } from '~/types'
-import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote, RefreshCw, Cast, Link, Check, ArrowLeft, ShieldAlert, Minus, Plus } from 'lucide-vue-next'
+import { Timer, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, StickyNote, RefreshCw, Cast, Link, Check, ArrowLeft, ShieldAlert, Minus, Plus, Settings } from 'lucide-vue-next'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -18,6 +18,36 @@ const theme = computed(() => presentation.value?.theme?.config)
 const notes = computed(() => currentSlide.value?.notes || '')
 
 const { remoteIndex, remoteZoom, init, sendIndex, sendZoom, destroy } = usePresenterSync(presentationId, 'presenter')
+
+// Presenter preferences — persisted to localStorage
+const PREFS_KEY = 'slide-builder-presenter-prefs'
+const defaultPrefs = { showNextSlide: true, showNotes: true, showTimer: true, notesFontSize: 18 }
+
+const prefs = ref({ ...defaultPrefs })
+const showSettings = ref(false)
+
+function loadPrefs() {
+  try {
+    const saved = localStorage.getItem(PREFS_KEY)
+    if (saved) prefs.value = { ...defaultPrefs, ...JSON.parse(saved) }
+  } catch {}
+}
+
+function savePrefs() {
+  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs.value))
+}
+
+function togglePref(key: keyof typeof defaultPrefs) {
+  if (typeof prefs.value[key] === 'boolean') {
+    (prefs.value as any)[key] = !(prefs.value as any)[key]
+    savePrefs()
+  }
+}
+
+function adjustNotesFontSize(delta: number) {
+  prefs.value.notesFontSize = Math.min(36, Math.max(12, prefs.value.notesFontSize + delta))
+  savePrefs()
+}
 
 // Zoom controls
 const zoomLevel = ref(1)
@@ -155,11 +185,13 @@ function handleKeydown(e: KeyboardEvent) {
 }
 
 onMounted(() => {
+  loadPrefs()
   initCache()
   init()
   checkCastSupport()
   startTimer()
   window.addEventListener('keydown', handleKeydown)
+  document.addEventListener('click', handleSettingsOutside)
 })
 
 onUnmounted(() => {
@@ -167,7 +199,13 @@ onUnmounted(() => {
   stopCast()
   pauseTimer()
   window.removeEventListener('keydown', handleKeydown)
+  document.removeEventListener('click', handleSettingsOutside)
 })
+
+function handleSettingsOutside(e: Event) {
+  const el = document.querySelector('.settings-wrapper')
+  if (el && !el.contains(e.target as Node)) showSettings.value = false
+}
 </script>
 
 <template>
@@ -184,13 +222,13 @@ onUnmounted(() => {
   <div class="presenter-view" v-else>
     <!-- Top: Slides -->
     <div class="slides-row">
-      <div class="current-slide-box">
+      <div class="current-slide-box" :class="{ 'full-width': !prefs.showNextSlide }">
         <div class="slide-label">Slide Atual</div>
         <div class="slide-frame">
           <EditorSlidePreview v-if="currentSlide" :slide="currentSlide" :theme="theme" />
         </div>
       </div>
-      <div class="next-slide-box">
+      <div class="next-slide-box" v-if="prefs.showNextSlide">
         <div class="slide-label">Próximo</div>
         <div class="slide-frame small">
           <EditorSlidePreview v-if="nextSlide" :slide="nextSlide" :theme="theme" />
@@ -204,7 +242,7 @@ onUnmounted(() => {
       <button @click="goBack" class="ctrl-btn back-btn" title="Voltar ao editor">
         <ArrowLeft :size="16" />
       </button>
-      <div class="timer" :class="{ paused: !timerRunning }">
+      <div class="timer" :class="{ paused: !timerRunning }" v-if="prefs.showTimer">
         <Timer :size="22" /> {{ timerDisplay }}
       </div>
       <div class="nav-controls">
@@ -218,8 +256,8 @@ onUnmounted(() => {
           <button @click="resetZoom" class="zoom-label" :title="'Zoom: ' + zoomPercent + '%'">{{ zoomPercent }}%</button>
           <button @click="zoomIn" class="ctrl-btn" :disabled="zoomLevel >= 3" title="Aumentar zoom"><Plus :size="16" /></button>
         </div>
-        <button @click="toggleTimer" class="ctrl-btn"><component :is="timerRunning ? Pause : Play" :size="16" /></button>
-        <button @click="resetTimer" class="ctrl-btn"><RotateCcw :size="16" /></button>
+        <button @click="toggleTimer" class="ctrl-btn" v-if="prefs.showTimer"><component :is="timerRunning ? Pause : Play" :size="16" /></button>
+        <button @click="resetTimer" class="ctrl-btn" v-if="prefs.showTimer"><RotateCcw :size="16" /></button>
         <button @click="forceSync" class="ctrl-btn sync-btn" :class="{ spinning: syncing }" title="Sincronizar dados do servidor">
           <RefreshCw :size="16" />
         </button>
@@ -231,13 +269,40 @@ onUnmounted(() => {
           <Cast :size="16" />
           <span class="cast-label">{{ casting ? 'Parar' : 'Transmitir' }}</span>
         </button>
+        <div class="settings-wrapper">
+          <button @click.stop="showSettings = !showSettings" class="ctrl-btn settings-btn" :class="{ active: showSettings }" title="Preferências">
+            <Settings :size="16" />
+          </button>
+          <div class="settings-panel" v-if="showSettings" @click.stop>
+            <div class="settings-title">Preferências</div>
+            <label class="settings-toggle">
+              <input type="checkbox" :checked="prefs.showNextSlide" @change="togglePref('showNextSlide')" />
+              <span>Próximo slide</span>
+            </label>
+            <label class="settings-toggle">
+              <input type="checkbox" :checked="prefs.showNotes" @change="togglePref('showNotes')" />
+              <span>Notas do palestrante</span>
+            </label>
+            <label class="settings-toggle">
+              <input type="checkbox" :checked="prefs.showTimer" @change="togglePref('showTimer')" />
+              <span>Cronômetro</span>
+            </label>
+            <div class="settings-divider" />
+            <div class="settings-label">Tamanho das notas</div>
+            <div class="notes-size-controls">
+              <button @click="adjustNotesFontSize(-2)" class="size-btn" :disabled="prefs.notesFontSize <= 12">A-</button>
+              <span class="size-value">{{ prefs.notesFontSize }}px</span>
+              <button @click="adjustNotesFontSize(2)" class="size-btn" :disabled="prefs.notesFontSize >= 36">A+</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Bottom: Notes -->
-    <div class="notes-row">
+    <div class="notes-row" v-if="prefs.showNotes">
       <div class="notes-label"><StickyNote :size="14" /> Notas do Palestrante</div>
-      <div class="notes-content" v-if="notes">{{ notes }}</div>
+      <div class="notes-content" v-if="notes" :style="{ fontSize: prefs.notesFontSize + 'px' }">{{ notes }}</div>
       <div class="notes-empty" v-else>Sem notas para este slide</div>
     </div>
   </div>
@@ -269,6 +334,10 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+}
+
+.current-slide-box.full-width {
+  flex: 1;
 }
 
 .next-slide-box {
@@ -530,7 +599,6 @@ onUnmounted(() => {
 }
 
 .notes-content {
-  font-size: 18px;
   line-height: 1.7;
   color: #e6edf3;
   white-space: pre-wrap;
@@ -540,5 +608,89 @@ onUnmounted(() => {
   font-size: 14px;
   color: #484f58;
   font-style: italic;
+}
+
+/* Settings Panel */
+.settings-wrapper {
+  position: relative;
+}
+.settings-btn.active {
+  background: rgba(88, 166, 255, 0.15);
+  border-color: #58a6ff;
+  color: #58a6ff;
+}
+.settings-panel {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  background: #1c2128;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 12px 14px;
+  min-width: 220px;
+  z-index: 200;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.settings-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #8b949e;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: #e6edf3;
+}
+.settings-toggle input[type="checkbox"] {
+  accent-color: #58a6ff;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.settings-divider {
+  border-top: 1px solid #30363d;
+  margin: 8px 0;
+}
+.settings-label {
+  font-size: 12px;
+  color: #8b949e;
+  margin-bottom: 6px;
+}
+.notes-size-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.size-btn {
+  background: rgba(255,255,255,0.08);
+  color: #e6edf3;
+  border: 1px solid #30363d;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.size-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.15);
+}
+.size-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.size-value {
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #8b949e;
+  min-width: 36px;
+  text-align: center;
 }
 </style>
