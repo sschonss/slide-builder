@@ -191,7 +191,7 @@ async function handleExport() {
 </template>
 
 <style scoped>
-.editor { display: flex; flex-direction: column; height: 100vh; }
+.editor { display: flex; flex-direction: column; height: 100%; }
 .editor-body { display: flex; flex: 1; overflow: hidden; }
 .panel-left { width: 160px; background: #0d1117; border-right: 1px solid #30363d; overflow-y: auto; flex-shrink: 0; }
 .panel-center { flex: 1; display: flex; align-items: center; justify-content: center; background: #1a1a2e; padding: 24px; }

@@ -138,7 +138,7 @@ async function toggleVisibility(p: any) {
 </template>
 
 <style scoped>
-.container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+.container { max-width: 900px; margin: 0 auto; padding: 40px 20px; height: 100%; display: flex; flex-direction: column; }
 .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; gap: 8px; }
 .header h1 { font-size: 24px; }
 .actions { display: flex; gap: 8px; }
@@ -146,7 +146,7 @@ async function toggleVisibility(p: any) {
 .btn-primary:hover { background: #d63851; }
 .btn-import { background: rgba(255,255,255,0.08); color: #e6edf3; border: 1px solid #30363d; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px; }
 .btn-import:hover { background: rgba(255,255,255,0.15); }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; flex: 1; align-content: start; overflow-y: auto; }
 .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; display: flex; align-items: center; }
 .card-body { flex: 1; padding: 20px; }
 .card-body h3 { font-size: 16px; margin-bottom: 4px; }

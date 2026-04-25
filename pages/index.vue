@@ -23,7 +23,7 @@ watch(isLoggedIn, (value) => {
 </template>
 
 <style scoped>
-.landing { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 52px); }
+.landing { display: flex; align-items: center; justify-content: center; height: 100%; }
 .hero { text-align: center; }
 .hero h1 { font-size: 48px; font-weight: 700; margin-bottom: 12px; }
 .subtitle { font-size: 18px; color: #8b949e; margin-bottom: 32px; }
