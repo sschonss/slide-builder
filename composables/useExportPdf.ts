@@ -46,9 +46,12 @@ export function useExportPdf() {
             diagramSvgs[i] = data.excalidraw_svg
           }
         } else if (slide.template === 'bio') {
-          // Use avatars.githubusercontent.com directly — github.com/{user}.png redirects cross-domain without CORS headers
+          // Resolve photo URL — always use avatars.githubusercontent.com (supports CORS)
           const username = data.github_username
-          const photoUrl = data.photo_url || (username ? `https://avatars.githubusercontent.com/${username}` : '')
+          let photoUrl = data.photo_url || (username ? `https://avatars.githubusercontent.com/${username}` : '')
+          // Convert github.com/{user}.png URLs (no CORS) to avatars.githubusercontent.com (has CORS)
+          const ghMatch = photoUrl.match(/^https?:\/\/github\.com\/([^/]+)\.png/)
+          if (ghMatch) photoUrl = `https://avatars.githubusercontent.com/${ghMatch[1]}`
           if (photoUrl) {
             try {
               const img = new Image()
@@ -183,7 +186,11 @@ function renderSlideHtml(slide: any, theme: any, diagramSvg?: string, bioImage?:
         </div>`
 
     case 'bio':
-      const bioPhotoSrc = bioImage || (data.photo_url || (data.github_username ? `https://avatars.githubusercontent.com/${data.github_username}` : ''))
+      // Convert github.com URLs to avatars.githubusercontent.com for CORS compatibility
+      let rawPhotoUrl = data.photo_url || (data.github_username ? `https://avatars.githubusercontent.com/${data.github_username}` : '')
+      const ghMatchRender = rawPhotoUrl.match(/^https?:\/\/github\.com\/([^/]+)\.png/)
+      if (ghMatchRender) rawPhotoUrl = `https://avatars.githubusercontent.com/${ghMatchRender[1]}`
+      const bioPhotoSrc = bioImage || rawPhotoUrl
       return `
         <div style="display:flex;gap:60px;align-items:center;width:100%;padding:20px;">
           <div style="flex-shrink:0;">

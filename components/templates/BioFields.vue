@@ -7,7 +7,7 @@ function updateUsername(value: string) {
   emit('update', {
     ...props.data,
     github_username: value,
-    photo_url: value ? `https://github.com/${value}.png` : '',
+    photo_url: value ? `https://avatars.githubusercontent.com/${value}` : '',
   })
 }
 
