@@ -12,3 +12,4 @@ backups/
 .env.*
 !.env.example
 .vercel
+dev.db

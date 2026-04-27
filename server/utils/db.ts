@@ -1,4 +1,5 @@
 import { createClient as createHttpClient, type Client } from '@libsql/client/http'
+import { createClient as createLocalClient } from '@libsql/client'
 import { v4 as uuid } from 'uuid'
 
 let _client: Client | null = null
@@ -7,12 +8,17 @@ let _initPromise: Promise<void> | null = null
 
 export function getClient(): Client {
   if (_client) return _client
+
+  if (import.meta.dev) {
+    _client = createLocalClient({ url: 'file:dev.db' }) as unknown as Client
+    return _client
+  }
+
   const config = useRuntimeConfig()
   const url = config.tursoUrl || ''
   if (!url) {
     throw new Error('[slide-builder] NUXT_TURSO_URL is not set')
   }
-  // Convert libsql:// to https:// for HTTP client
   const httpUrl = url.replace(/^libsql:\/\//, 'https://')
   _client = createHttpClient({
     url: httpUrl,
