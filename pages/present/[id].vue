@@ -76,14 +76,27 @@ onMounted(() => {
   initCache()
   init()
   window.addEventListener('keydown', handleKeydown)
+  // Block all scrolling during presentation
+  document.body.style.overflow = 'hidden'
+  document.documentElement.style.overflow = 'hidden'
+  window.addEventListener('wheel', preventScroll, { passive: false })
+  window.addEventListener('touchmove', preventScroll, { passive: false })
   nextTick(() => {
     document.documentElement.requestFullscreen?.().catch(() => {})
   })
 })
 
+function preventScroll(e: Event) {
+  e.preventDefault()
+}
+
 onUnmounted(() => {
   destroy()
   window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('wheel', preventScroll)
+  window.removeEventListener('touchmove', preventScroll)
+  document.body.style.overflow = ''
+  document.documentElement.style.overflow = ''
 })
 </script>
 
