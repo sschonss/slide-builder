@@ -27,23 +27,25 @@ export default defineEventHandler(async (event) => {
   const parsedSlides = slides.map((s: any) => ({ ...s, data: JSON.parse(s.data) }))
   const markdown = generateMarkdown(presentation.title, parsedSlides, themeConfig)
 
-  // Write to output directory
-  const outDir = join(process.cwd(), 'output', body.presentation_id)
-  mkdirSync(outDir, { recursive: true })
-  writeFileSync(join(outDir, 'slides.md'), markdown, 'utf-8')
+  // Write to output directory (skip on read-only filesystems like Vercel)
+  try {
+    const outDir = join(process.cwd(), 'output', body.presentation_id)
+    mkdirSync(outDir, { recursive: true })
+    writeFileSync(join(outDir, 'slides.md'), markdown, 'utf-8')
 
-  // Copy assets
-  const assets = await dbAll('SELECT * FROM assets WHERE presentation_id = ?', [body.presentation_id]) as any[]
-  if (assets.length > 0) {
-    const assetsDir = join(outDir, 'assets')
-    mkdirSync(assetsDir, { recursive: true })
-    for (const asset of assets) {
-      const src = join(process.cwd(), asset.path)
-      if (existsSync(src)) {
-        copyFileSync(src, join(assetsDir, asset.filename))
+    // Copy assets
+    const assets = await dbAll('SELECT * FROM assets WHERE presentation_id = ?', [body.presentation_id]) as any[]
+    if (assets.length > 0) {
+      const assetsDir = join(outDir, 'assets')
+      mkdirSync(assetsDir, { recursive: true })
+      for (const asset of assets) {
+        const src = join(process.cwd(), asset.path)
+        if (existsSync(src)) {
+          copyFileSync(src, join(assetsDir, asset.filename))
+        }
       }
     }
-  }
+  } catch {}
 
-  return { success: true, path: join(outDir, 'slides.md'), markdown }
+  return { success: true, markdown }
 })

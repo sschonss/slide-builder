@@ -1,4 +1,4 @@
-import type { Slide, ThemeConfig, CoverData, SectionData, ContentData, DiagramData, CodeData, ComparisonData } from '../../types'
+import type { Slide, ThemeConfig, CoverData, SectionData, ContentData, DiagramData, CodeData, ComparisonData, BioData, CreditsData } from '../../types'
 
 export function generateMarkdown(title: string, slides: Slide[], theme: ThemeConfig): string {
   const parts: string[] = []
@@ -45,6 +45,8 @@ function generateSlide(slide: Slide): string {
     case 'diagram': return generateDiagram(slide)
     case 'code': return generateCode(slide)
     case 'comparison': return generateComparison(slide)
+    case 'bio': return generateBio(slide)
+    case 'credits': return generateCredits(slide)
     default: return ''
   }
 }
@@ -124,4 +126,31 @@ function generateComparison(slide: Slide): string {
 
 function appendNotes(lines: string[], notes?: string) {
   if (notes) lines.push('', '<!--', notes, '-->')
+}
+
+function generateBio(slide: Slide): string {
+  const data = slide.data as BioData
+  const lines = ['---', 'layout: two-cols', '---', '']
+  const photoUrl = data.photo_url || (data.github_username ? `https://github.com/${data.github_username}.png` : '')
+  lines.push('::left::')
+  if (photoUrl) lines.push('', `<img src="${photoUrl}" class="rounded-full w-40 h-40" />`)
+  lines.push('', '::right::', '')
+  lines.push(`# ${data.title || ''}`, '')
+  if (data.bullets?.length) {
+    data.bullets.forEach(b => lines.push(`- ${b}`))
+  }
+  appendNotes(lines, slide.notes)
+  return lines.join('\n')
+}
+
+function generateCredits(slide: Slide): string {
+  const data = slide.data as CreditsData
+  const repoUrl = data.repo_url || 'https://github.com/sschonss/slide-builder'
+  const message = data.message || 'Feito com Slide Builder'
+  const lines = ['---', 'layout: center', '---', '']
+  lines.push(`# Slide Builder`, '', `${message}`, '')
+  lines.push(`![QR Code](https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(repoUrl)})`, '')
+  lines.push(`<p class="text-sm opacity-50">${repoUrl}</p>`)
+  appendNotes(lines, slide.notes)
+  return lines.join('\n')
 }
