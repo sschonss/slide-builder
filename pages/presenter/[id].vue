@@ -326,13 +326,48 @@ function handleSettingsOutside(e: Event) {
 
     <!-- Mobile bottom nav (hidden on desktop) -->
     <div class="mobile-presenter-nav">
-      <button @click="prev" :disabled="currentSlideIndex <= 0" class="mobile-nav-btn">
-        <ChevronLeft :size="32" />
-      </button>
-      <span class="mobile-slide-count">{{ currentSlideIndex + 1 }} / {{ slides.length }}</span>
-      <button @click="next" :disabled="currentSlideIndex >= slides.length - 1" class="mobile-nav-btn next-btn">
-        <ChevronRight :size="32" />
-      </button>
+      <div class="mobile-top-row">
+        <div class="mobile-timer" v-if="prefs.showTimer" :class="{ paused: !timerRunning }" @click="toggleTimer">
+          <Timer :size="16" /> {{ timerDisplay }}
+        </div>
+        <div class="mobile-actions">
+          <button @click="copyAudienceLink" class="mobile-action-btn" :class="{ copied: linkCopied }">
+            <component :is="linkCopied ? Check : Link" :size="16" />
+          </button>
+          <div class="settings-wrapper mobile-settings-wrapper">
+            <button @click.stop="showSettings = !showSettings" class="mobile-action-btn" :class="{ active: showSettings }">
+              <Settings :size="16" />
+            </button>
+            <div class="settings-panel mobile-settings-panel" v-if="showSettings" @click.stop>
+              <div class="settings-title">Preferências</div>
+              <label class="settings-toggle">
+                <input type="checkbox" :checked="prefs.showNotes" @change="togglePref('showNotes')" />
+                <span>Notas</span>
+              </label>
+              <label class="settings-toggle">
+                <input type="checkbox" :checked="prefs.showTimer" @change="togglePref('showTimer')" />
+                <span>Cronômetro</span>
+              </label>
+              <div class="settings-divider" />
+              <div class="settings-label">Tamanho das notas</div>
+              <div class="notes-size-controls">
+                <button @click="adjustNotesFontSize(-2)" class="size-btn" :disabled="prefs.notesFontSize <= 12">A-</button>
+                <span class="size-value">{{ prefs.notesFontSize }}px</span>
+                <button @click="adjustNotesFontSize(2)" class="size-btn" :disabled="prefs.notesFontSize >= 36">A+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mobile-nav-row">
+        <button @click="prev" :disabled="currentSlideIndex <= 0" class="mobile-nav-btn">
+          <ChevronLeft :size="32" />
+        </button>
+        <span class="mobile-slide-count">{{ currentSlideIndex + 1 }} / {{ slides.length }}</span>
+        <button @click="next" :disabled="currentSlideIndex >= slides.length - 1" class="mobile-nav-btn next-btn">
+          <ChevronRight :size="32" />
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -730,13 +765,13 @@ function handleSettingsOutside(e: Event) {
 
 @media (max-width: 640px) {
   .presenter-view {
-    height: 100dvh; /* dynamic viewport height — excludes browser chrome */
+    height: 100dvh;
   }
-  /* Reorder: slide → nav buttons → timer → notes */
+  /* Reorder: slide → nav+controls → notes */
   .slides-row { order: 1; }
   .mobile-presenter-nav { order: 2; }
-  .controls-row { order: 3; }
-  .notes-row { order: 4; }
+  .controls-row { order: 99; display: none; }
+  .notes-row { order: 3; }
 
   .slides-row {
     flex-direction: column;
@@ -751,20 +786,6 @@ function handleSettingsOutside(e: Event) {
   .next-slide-box {
     display: none;
   }
-  .controls-row {
-    padding: 4px 8px;
-    gap: 6px;
-    flex-wrap: wrap;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .timer {
-    font-size: 18px;
-    min-width: auto;
-  }
-  .nav-controls { display: none; }
-  .action-controls { display: none; }
-  .back-btn { display: none; }
 
   .notes-row {
     flex: 1;
@@ -776,12 +797,77 @@ function handleSettingsOutside(e: Event) {
 
   .mobile-presenter-nav {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 6px;
     padding: 8px 12px;
     flex-shrink: 0;
     border-top: 1px solid #30363d;
     border-bottom: 1px solid #30363d;
     background: #161b22;
+  }
+  .mobile-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .mobile-timer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    color: #58a6ff;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .mobile-timer:active {
+    background: rgba(88, 166, 255, 0.1);
+  }
+  .mobile-timer.paused {
+    color: #f0883e;
+  }
+  .mobile-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .mobile-action-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e6edf3;
+    border: 1px solid #30363d;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .mobile-action-btn:active {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .mobile-action-btn.copied {
+    background: rgba(63, 185, 80, 0.15);
+    border-color: #3fb950;
+    color: #3fb950;
+  }
+  .mobile-action-btn.active {
+    background: rgba(88, 166, 255, 0.15);
+    border-color: #58a6ff;
+    color: #58a6ff;
+  }
+  .mobile-settings-wrapper {
+    position: relative;
+  }
+  .mobile-settings-panel {
+    bottom: auto;
+    top: 100%;
+    margin-top: 8px;
+    margin-bottom: 0;
+    right: 0;
+  }
+  .mobile-nav-row {
+    display: flex;
+    gap: 8px;
     align-items: center;
   }
   .mobile-nav-btn {

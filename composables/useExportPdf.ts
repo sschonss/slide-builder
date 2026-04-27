@@ -49,13 +49,19 @@ export function useExportPdf() {
           const photoUrl = data.photo_url || (data.github_username ? `https://github.com/${data.github_username}.png` : '')
           if (photoUrl) {
             try {
-              const resp = await fetch(photoUrl)
-              const blob = await resp.blob()
-              imageDataUrls[i] = await new Promise<string>((resolve) => {
-                const reader = new FileReader()
-                reader.onloadend = () => resolve(reader.result as string)
-                reader.readAsDataURL(blob)
+              // Use Image + canvas to convert to base64 (fetch fails on CORS redirects from github.com)
+              const img = new Image()
+              img.crossOrigin = 'anonymous'
+              img.src = photoUrl
+              await new Promise<void>((resolve, reject) => {
+                img.onload = () => resolve()
+                img.onerror = () => reject(new Error('Image load failed'))
               })
+              const canvas = document.createElement('canvas')
+              canvas.width = img.naturalWidth
+              canvas.height = img.naturalHeight
+              canvas.getContext('2d')!.drawImage(img, 0, 0)
+              imageDataUrls[i] = canvas.toDataURL('image/png')
             } catch {}
           }
         }
