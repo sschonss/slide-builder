@@ -6,7 +6,7 @@ Crie apresentações profissionais direto no browser com temas customizáveis, e
 
 ## ✨ Features
 
-- 🎨 **Editor visual** com 6 templates de slide (Cover, Section, Content, Code, Diagram, Comparison)
+- 🎨 **Editor visual** com 8 templates de slide (Cover, Section, Content, Code, Diagram, Comparison, Bio, Credits)
 - 🖌️ **Temas customizáveis** — cores, fontes e tema de código
 - 📊 **Diagramas Mermaid** renderizados em tempo real
 - 🎬 **Modo apresentação** com presenter view (timer, notas, próximo slide)
@@ -15,7 +15,7 @@ Crie apresentações profissionais direto no browser com temas customizáveis, e
 - 🔐 **Autenticação** via GitHub OAuth
 - 👤 **Perfis públicos** em `/u/username` com apresentações públicas
 - 🔍 **Explorar** — busque usuários e descubra apresentações
-- 📖 **API REST** documentada para integrações
+- 📖 **API REST** documentada para integrações — [ver referência completa](docs/API.md)
 - 🔄 **Changelog** estilo git com rollback por slide
 
 ## 🛠️ Tech Stack
@@ -30,27 +30,34 @@ Crie apresentações profissionais direto no browser com temas customizáveis, e
 
 ## 🚀 Rodando localmente
 
-### Pré-requisitos
+### Quick Start (modo dev)
 
-- Node.js 18+
-- Conta no [Turso](https://turso.tech) (database)
-- GitHub OAuth App (para autenticação)
+No modo dev, **não é necessário configurar Turso ou GitHub OAuth** — tudo funciona automaticamente:
 
-### Setup
+- 🗄️ **Banco de dados:** SQLite local (`dev.db`) é usado automaticamente
+- 🔐 **Autenticação:** Auto-login como `dev-user` (sem GitHub OAuth)
 
 ```bash
 # Clone o repositório
 git clone https://github.com/sschonss/slide-builder.git
 cd slide-builder
 
-# Instale as dependências
+# Instale e rode
 npm install
+npm run dev
+```
 
-# Copie o arquivo de ambiente
+Acesse [http://localhost:3000](http://localhost:3000) — pronto!
+
+### Configuração para Produção
+
+Para deploy em produção, configure as variáveis de ambiente:
+
+```bash
 cp .env.example .env
 ```
 
-### Configurando o `.env`
+#### `.env`
 
 ```bash
 # Turso Database
@@ -85,14 +92,6 @@ turso db create slide-builder
 turso db show slide-builder --url    # copie para NUXT_TURSO_URL
 turso db tokens create slide-builder # copie para NUXT_TURSO_TOKEN
 ```
-
-### Rodando
-
-```bash
-npm run dev
-```
-
-Acesse [http://localhost:3000](http://localhost:3000)
 
 ## 📁 Estrutura do Projeto
 
