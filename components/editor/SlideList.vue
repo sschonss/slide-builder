@@ -29,6 +29,7 @@ function handleAdd(template: string) {
 const TEMPLATE_COLORS: Record<string, string> = {
   cover: '#e94560', section: '#e94560', content: '#533483',
   diagram: '#0f3460', code: '#238636', comparison: '#da3633',
+  bio: '#1f6feb', credits: '#8b949e',
 }
 </script>
 

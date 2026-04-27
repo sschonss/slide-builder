@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Slide, ThemeConfig, CoverData, SectionData, ContentData, DiagramData, CodeData, ComparisonData } from '~/types'
+import type { Slide, ThemeConfig, CoverData, SectionData, ContentData, DiagramData, CodeData, ComparisonData, BioData, CreditsData } from '~/types'
 import mermaid from 'mermaid'
 
 const props = defineProps<{ slide: Slide; theme?: ThemeConfig }>()
@@ -109,6 +109,37 @@ watch(mermaidCode, async (code) => {
           </div>
         </div>
       </template>
+
+      <!-- Bio -->
+      <template v-else-if="slide.template === 'bio'">
+        <div class="bio-slide">
+          <div class="bio-photo">
+            <img v-if="(slide.data as BioData).photo_url || (slide.data as BioData).github_username"
+                 :src="(slide.data as BioData).photo_url || `https://github.com/${(slide.data as BioData).github_username}.png`"
+                 :alt="(slide.data as BioData).github_username"
+                 class="avatar" />
+            <div v-else class="avatar-placeholder">?</div>
+          </div>
+          <div class="bio-info">
+            <h1>{{ (slide.data as BioData).title }}</h1>
+            <ul>
+              <li v-for="(b, i) in ((slide.data as BioData).bullets || [])" :key="i">{{ b }}</li>
+            </ul>
+          </div>
+        </div>
+      </template>
+
+      <!-- Credits -->
+      <template v-else-if="slide.template === 'credits'">
+        <div class="credits-slide">
+          <div class="credits-badge">Slide Builder</div>
+          <p class="credits-message">{{ (slide.data as CreditsData).message || 'Feito com Slide Builder' }}</p>
+          <div class="credits-qr">
+            <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent((slide.data as CreditsData).repo_url || 'https://github.com/sschonss/slide-builder')}&bgcolor=1a1a2e&color=ffffff`" alt="QR Code" class="qr-img" />
+          </div>
+          <p class="credits-url">{{ (slide.data as CreditsData).repo_url || 'github.com/sschonss/slide-builder' }}</p>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -149,4 +180,17 @@ h2 { font-size: 18px; opacity: 0.7; }
 .col { background: rgba(255,255,255,0.05); padding: 16px; border-radius: 8px; }
 .col h3 { font-size: 16px; margin-bottom: 8px; }
 .col ul { list-style: disc; padding-left: 16px; font-size: 13px; line-height: 1.6; }
+
+.bio-slide { display: flex; gap: 32px; align-items: center; width: 100%; }
+.bio-photo { flex-shrink: 0; }
+.avatar { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 3px solid currentColor; }
+.avatar-placeholder { width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 48px; opacity: 0.3; }
+.bio-info { flex: 1; text-align: left; }
+.bio-info ul { list-style: disc; padding-left: 20px; font-size: 14px; line-height: 1.8; margin-top: 8px; }
+
+.credits-slide { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.credits-badge { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
+.credits-message { font-size: 16px; opacity: 0.7; }
+.qr-img { width: 120px; height: 120px; border-radius: 8px; }
+.credits-url { font-size: 11px; opacity: 0.4; font-family: 'JetBrains Mono', monospace; }
 </style>

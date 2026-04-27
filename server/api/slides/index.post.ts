@@ -11,6 +11,8 @@ const DEFAULT_DATA: Record<string, object> = {
   diagram: { title: '', diagram_type: 'mermaid', mermaid_code: '' },
   code: { title: '', code: '', language: 'typescript' },
   comparison: { title: '', left_title: '', left_items: [''], right_title: '', right_items: [''], style: 'columns' },
+  bio: { github_username: '', title: '', bullets: [''], photo_url: '' },
+  credits: { repo_url: 'https://github.com/sschonss/slide-builder', message: 'Feito com Slide Builder' },
 }
 
 export default defineEventHandler(async (event) => {

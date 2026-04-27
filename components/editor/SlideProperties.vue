@@ -31,6 +31,8 @@ const templateOptions = [
   { value: 'diagram', label: 'Diagram' },
   { value: 'code', label: 'Code' },
   { value: 'comparison', label: 'Comparison' },
+  { value: 'bio', label: 'Bio' },
+  { value: 'credits', label: 'Credits' },
 ]
 </script>
 
@@ -53,6 +55,8 @@ const templateOptions = [
     <TemplatesDiagramFields v-else-if="slide.template === 'diagram'" :data="slide.data as any" :presentation-id="presentationId" :slide-id="slide.id" @update="onDataUpdate" />
     <TemplatesCodeFields v-else-if="slide.template === 'code'" :data="slide.data as any" @update="onDataUpdate" />
     <TemplatesComparisonFields v-else-if="slide.template === 'comparison'" :data="slide.data as any" @update="onDataUpdate" />
+    <TemplatesBioFields v-else-if="slide.template === 'bio'" :data="slide.data as any" @update="onDataUpdate" />
+    <TemplatesCreditsFields v-else-if="slide.template === 'credits'" :data="slide.data as any" @update="onDataUpdate" />
 
     <div class="divider" />
 

@@ -1,4 +1,4 @@
-export type SlideTemplate = 'cover' | 'section' | 'content' | 'diagram' | 'code' | 'comparison'
+export type SlideTemplate = 'cover' | 'section' | 'content' | 'diagram' | 'code' | 'comparison' | 'bio' | 'credits'
 
 export interface CoverData {
   title: string
@@ -49,7 +49,19 @@ export interface ComparisonData {
   style: 'columns' | 'table'
 }
 
-export type SlideData = CoverData | SectionData | ContentData | DiagramData | CodeData | ComparisonData
+export interface BioData {
+  github_username: string
+  title: string
+  bullets: string[]
+  photo_url?: string
+}
+
+export interface CreditsData {
+  repo_url: string
+  message?: string
+}
+
+export type SlideData = CoverData | SectionData | ContentData | DiagramData | CodeData | ComparisonData | BioData | CreditsData
 
 export interface Slide {
   id: string
