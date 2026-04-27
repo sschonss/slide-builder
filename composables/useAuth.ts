@@ -9,7 +9,13 @@ export function useAuth() {
     navigateTo('/')
   }
 
-  function login() {
+  async function login() {
+    if (import.meta.dev) {
+      await $fetch('/api/auth/dev-login', { method: 'POST' })
+      await fetchSession()
+      navigateTo('/dashboard')
+      return
+    }
     // Use direct location change to keep within PWA context
     // navigateTo with external: true opens Safari on iOS
     window.location.href = '/auth/github'
