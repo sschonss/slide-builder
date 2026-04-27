@@ -144,36 +144,7 @@ export function useEditorShortcuts(options: {
 
 ---
 
-## Feature 4: Real-time Preview
-
-**What:** Slide preview updates instantly as the user types, without waiting for save.
-
-### Current Behavior (already partially works)
-
-The data flow is:
-```
-SlideProperties emits 'update' (500ms debounce)
-  → editor [id].vue updateSlide() → localEdits
-  → slides computed merges localEdits with base
-  → SlidePreview receives merged slide via prop
-```
-
-**This already provides near-real-time preview** because `localEdits` is reactive and `slides` is a computed that merges them. The 500ms debounce in SlideProperties is the only delay.
-
-### Improvements
-
-1. **Reduce debounce** in `SlideProperties.vue` from 500ms to 150ms for data updates (keep 500ms for notes since those aren't visible in preview)
-2. **Optimistic mermaid rendering**: In `SlidePreview.vue`, debounce mermaid re-renders separately at 500ms (mermaid is expensive), but show a "rendering..." indicator while pending
-3. **Visual save indicator**: Enhance `SavingIndicator.vue` to show "Editando..." when there are local edits, "Salvando..." during save, "Salvo ✓" after save
-
-### Tests
-
-- Unit test: SlideProperties emits update within 150ms for data changes
-- Unit test: SlideProperties keeps 500ms debounce for notes
-
----
-
-## Feature 5: Undo/Redo
+## Feature 4: Undo/Redo
 
 **What:** Ctrl+Z to undo, Ctrl+Shift+Z to redo changes in the current slide.
 
@@ -241,10 +212,9 @@ Each feature that adds/modifies an API endpoint updates `public/openapi.json`:
 
 ```
 Feature 1 (Duplicate) → independent
-Feature 2 (Shortcuts) → independent (but extends to support Feature 5's Ctrl+Z)
+Feature 2 (Shortcuts) → independent (but extends to support Feature 4's Ctrl+Z)
 Feature 3 (Drag & Drop) → independent
-Feature 4 (Real-time Preview) → independent
-Feature 5 (Undo/Redo) → depends on Feature 2 (extends shortcuts composable)
+Feature 4 (Undo/Redo) → depends on Feature 2 (extends shortcuts composable)
 ```
 
-Features 1-4 can be implemented in any order. Feature 5 must come after Feature 2.
+Features 1-3 can be implemented in any order. Feature 4 must come after Feature 2.
