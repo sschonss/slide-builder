@@ -856,14 +856,19 @@ function handleSettingsOutside(e: Event) {
     color: #58a6ff;
   }
   .mobile-settings-wrapper {
-    position: relative;
+    position: static;
   }
   .mobile-settings-panel {
+    position: fixed;
     bottom: auto;
-    top: 100%;
-    margin-top: 8px;
-    margin-bottom: 0;
-    right: 0;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    right: auto;
+    width: calc(100vw - 32px);
+    max-width: 300px;
+    z-index: 500;
   }
   .mobile-nav-row {
     display: flex;
