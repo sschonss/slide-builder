@@ -146,14 +146,14 @@ watch(mermaidCode, async (code) => {
 
 <style scoped>
 .preview-wrapper { width: 100%; max-width: 720px; aspect-ratio: 16/9; overflow: hidden; }
-.slide { width: 100%; height: 100%; border-radius: 8px; padding: 16px 40px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+.slide { width: 100%; height: 100%; border-radius: 8px; padding: 16px 40px; display: flex; align-items: flex-start; justify-content: flex-start; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
 h1 { font-size: 28px; margin-bottom: 8px; }
 h2 { font-size: 18px; opacity: 0.7; }
 
-.cover { text-align: center; }
+.cover { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
 .author { font-size: 13px; opacity: 0.5; margin-top: 8px; }
 
-.section-slide { text-align: left; }
+.section-slide { text-align: left; display: flex; flex-direction: column; justify-content: center; width: 100%; height: 100%; }
 .section-num { font-size: 11px; opacity: 0.4; letter-spacing: 2px; text-transform: uppercase; }
 
 .content-slide { text-align: left; width: 100%; }
@@ -189,7 +189,7 @@ h2 { font-size: 18px; opacity: 0.7; }
 .bio-info h1 { font-size: 32px; margin-bottom: 12px; }
 .bio-info ul { list-style: disc; padding-left: 24px; font-size: 18px; line-height: 1.8; margin-top: 8px; }
 
-.credits-slide { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.credits-slide { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; width: 100%; height: 100%; }
 .credits-badge { font-size: 36px; font-weight: 700; letter-spacing: 2px; }
 .credits-message { font-size: 22px; opacity: 0.7; }
 .qr-img { width: 160px; height: 160px; border-radius: 8px; }
