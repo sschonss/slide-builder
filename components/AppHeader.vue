@@ -103,4 +103,16 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 .btn-update.spinning { color: #58a6ff; pointer-events: none; }
 .btn-update.spinning :deep(svg) { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+@media (max-width: 640px) {
+  .app-header { padding: 8px 12px; }
+  .logo { font-size: 14px; }
+  .logo span.version { display: none; }
+  .nav { gap: 8px; }
+  .nav-link { font-size: 0; gap: 0; }
+  .nav-link :deep(svg) { font-size: initial; }
+  .btn-login { padding: 8px 12px; font-size: 12px; }
+  .btn-update { padding: 4px 8px; font-size: 0; }
+  .btn-update :deep(svg) { font-size: initial; }
+}
 </style>

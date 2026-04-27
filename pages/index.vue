@@ -29,4 +29,9 @@ watch(isLoggedIn, (value) => {
 .subtitle { font-size: 18px; color: #8b949e; margin-bottom: 32px; }
 .btn-login { background: #238636; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; display: inline-flex; align-items: center; gap: 8px; }
 .btn-login:hover { background: #2ea043; }
+
+@media (max-width: 640px) {
+  .hero h1 { font-size: 32px; }
+  .subtitle { font-size: 15px; margin-bottom: 24px; }
+}
 </style>

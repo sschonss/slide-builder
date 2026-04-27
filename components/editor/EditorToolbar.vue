@@ -132,4 +132,19 @@ async function downloadBundle() {
 .pdf-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 999; }
 .pdf-modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 40px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; color: #e6edf3; }
 .pdf-modal .spin { color: #e94560; }
+
+@media (max-width: 640px) {
+  .toolbar { padding: 6px 8px; gap: 6px; flex-wrap: wrap; }
+  .toolbar-left { min-width: 0; }
+  .back { font-size: 0; }
+  .back :deep(svg) { font-size: initial; }
+  .title { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .toolbar-right { gap: 4px; }
+  .btn { padding: 6px 8px; font-size: 0; }
+  .btn :deep(svg) { font-size: initial; }
+  .btn-save { font-size: 0; }
+  .btn-save :deep(svg) { font-size: initial; }
+  .slide-count { font-size: 11px; min-width: 40px; }
+  .nav-btn { padding: 6px 8px; }
+}
 </style>

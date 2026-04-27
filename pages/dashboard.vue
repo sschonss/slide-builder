@@ -172,4 +172,15 @@ async function toggleVisibility(p: any) {
 .import-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 999; }
 .import-modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 40px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; color: #e6edf3; }
 .import-modal .spin { color: #e94560; }
+
+@media (max-width: 640px) {
+  .container { padding: 20px 12px; }
+  .header { flex-direction: column; align-items: stretch; gap: 12px; }
+  .header h1 { font-size: 20px; }
+  .actions { justify-content: stretch; }
+  .actions button { flex: 1; justify-content: center; }
+  .grid { grid-template-columns: 1fr; }
+  .card-body { padding: 14px; }
+  .card-body h3 { font-size: 14px; }
+}
 </style>

@@ -10,6 +10,7 @@ const { withSaving } = useSaving()
 const { data: presentation, refresh } = useFetch(`/api/presentations/${presentationId}`)
 const currentSlideIndex = ref(0)
 const showThemeEditor = ref(false)
+const mobilePanel = ref<'list' | 'preview' | 'properties'>('preview')
 
 const localEdits = ref<Record<string, Partial<Slide>>>({})
 
@@ -144,9 +145,15 @@ async function handleExport() {
       @navigate="navigateSlide"
     />
 
+    <div class="mobile-tabs">
+      <button :class="{ active: mobilePanel === 'list' }" @click="mobilePanel = 'list'">Slides</button>
+      <button :class="{ active: mobilePanel === 'preview' }" @click="mobilePanel = 'preview'">Preview</button>
+      <button :class="{ active: mobilePanel === 'properties' }" @click="mobilePanel = 'properties'">Editar</button>
+    </div>
+
     <div class="editor-body">
       <!-- Left: Slide List -->
-      <div class="panel-left">
+      <div class="panel-left" :class="{ 'mobile-hidden': mobilePanel !== 'list' }">
         <EditorSlideList
           :slides="slides"
           :current-index="currentSlideIndex"
@@ -158,7 +165,7 @@ async function handleExport() {
       </div>
 
       <!-- Center: Preview -->
-      <div class="panel-center">
+      <div class="panel-center" :class="{ 'mobile-hidden': mobilePanel !== 'preview' }">
         <EditorSlidePreview
           v-if="currentSlide"
           :slide="currentSlide"
@@ -167,7 +174,7 @@ async function handleExport() {
       </div>
 
       <!-- Right: Properties -->
-      <div class="panel-right">
+      <div class="panel-right" :class="{ 'mobile-hidden': mobilePanel !== 'properties' }">
         <EditorSlideProperties
           v-if="currentSlide"
           :slide="currentSlide"
@@ -196,4 +203,33 @@ async function handleExport() {
 .panel-left { width: 160px; background: #0d1117; border-right: 1px solid #30363d; overflow-y: auto; flex-shrink: 0; }
 .panel-center { flex: 1; display: flex; align-items: center; justify-content: center; background: #1a1a2e; padding: 24px; }
 .panel-right { width: 300px; background: #0d1117; border-left: 1px solid #30363d; overflow-y: auto; flex-shrink: 0; }
+
+.mobile-tabs { display: none; }
+
+@media (max-width: 640px) {
+  .mobile-tabs {
+    display: flex;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    flex-shrink: 0;
+  }
+  .mobile-tabs button {
+    flex: 1;
+    padding: 10px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #8b949e;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .mobile-tabs button.active {
+    color: #e94560;
+    border-bottom-color: #e94560;
+  }
+  .panel-left, .panel-right { width: 100%; }
+  .panel-center { padding: 12px; }
+  .mobile-hidden { display: none !important; }
+}
 </style>
