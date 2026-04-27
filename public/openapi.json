@@ -1,0 +1,933 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Slide Builder API",
+    "description": "API REST para criar e gerenciar apresentações profissionais. Use cookie de sessão para autenticação.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Luiz Schons",
+      "url": "https://github.com/sschonss/slide-builder"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://slide-builder-dev.vercel.app",
+      "description": "Produção (Vercel)"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Desenvolvimento local"
+    }
+  ],
+  "tags": [
+    { "name": "Auth", "description": "Autenticação e sessão" },
+    { "name": "Presentations", "description": "CRUD de apresentações" },
+    { "name": "Slides", "description": "CRUD de slides" },
+    { "name": "Themes", "description": "Temas customizáveis" },
+    { "name": "Users", "description": "Perfis e busca de usuários" },
+    { "name": "Export", "description": "Exportação de apresentações" },
+    { "name": "Sync", "description": "Sincronização do presenter" },
+    { "name": "Health", "description": "Status do serviço" }
+  ],
+  "paths": {
+    "/api/auth/dev-login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login de desenvolvimento",
+        "description": "Auto-login como dev-user. Disponível apenas em modo desenvolvimento (`npm run dev`). Retorna cookie de sessão.",
+        "responses": {
+          "200": {
+            "description": "Login realizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean", "example": true }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Endpoint não disponível em produção" }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout",
+        "description": "Encerra a sessão do usuário.",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Sessão encerrada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Success" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/presentations": {
+      "get": {
+        "tags": ["Presentations"],
+        "summary": "Listar apresentações",
+        "description": "Retorna todas as apresentações do usuário autenticado.",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Lista de apresentações",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PresentationSummary" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Não autenticado" }
+        }
+      },
+      "post": {
+        "tags": ["Presentations"],
+        "summary": "Criar apresentação",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "example": "Minha Talk" },
+                  "theme_id": { "type": "string", "description": "ID do tema (usa 'dark' se omitido)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Apresentação criada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Presentation" }
+              }
+            }
+          },
+          "401": { "description": "Não autenticado" }
+        }
+      }
+    },
+    "/api/presentations/{id}": {
+      "get": {
+        "tags": ["Presentations"],
+        "summary": "Detalhes da apresentação",
+        "description": "Retorna a apresentação completa com slides e tema. Apresentações públicas não exigem autenticação.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Apresentação com slides",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PresentationFull" }
+              }
+            }
+          },
+          "404": { "description": "Não encontrada ou privada" }
+        }
+      },
+      "put": {
+        "tags": ["Presentations"],
+        "summary": "Atualizar apresentação",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "theme_id": { "type": "string" },
+                  "visibility": { "type": "string", "enum": ["public", "private"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Atualizada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Success" }
+              }
+            }
+          },
+          "403": { "description": "Sem permissão" }
+        }
+      },
+      "delete": {
+        "tags": ["Presentations"],
+        "summary": "Deletar apresentação",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Success" }
+              }
+            }
+          },
+          "403": { "description": "Sem permissão" }
+        }
+      }
+    },
+    "/api/presentations/import": {
+      "post": {
+        "tags": ["Presentations"],
+        "summary": "Importar apresentação",
+        "description": "Importa um arquivo .slidebuilder (JSON bundle).",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ImportBundle" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Importada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "id": { "type": "string" },
+                    "title": { "type": "string" },
+                    "slide_count": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/slides": {
+      "get": {
+        "tags": ["Slides"],
+        "summary": "Listar slides",
+        "parameters": [
+          { "name": "presentation_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de slides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Slide" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Slides"],
+        "summary": "Criar slide",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["presentation_id"],
+                "properties": {
+                  "presentation_id": { "type": "string" },
+                  "template": { "$ref": "#/components/schemas/SlideTemplate" },
+                  "data": { "type": "object", "description": "Dados do slide (varia por template)" },
+                  "notes": { "type": "string" }
+                }
+              },
+              "examples": {
+                "cover": {
+                  "summary": "Slide de capa",
+                  "value": {
+                    "presentation_id": "abc-123",
+                    "template": "cover",
+                    "data": { "title": "Minha Talk", "subtitle": "Uma introdução", "author": "Luiz" }
+                  }
+                },
+                "content": {
+                  "summary": "Slide de conteúdo",
+                  "value": {
+                    "presentation_id": "abc-123",
+                    "template": "content",
+                    "data": { "title": "Tópicos", "bullets": ["Item 1", "Item 2", "Item 3"] }
+                  }
+                },
+                "code": {
+                  "summary": "Slide de código",
+                  "value": {
+                    "presentation_id": "abc-123",
+                    "template": "code",
+                    "data": { "title": "Exemplo", "code": "console.log('hello')", "language": "javascript" }
+                  }
+                },
+                "comparison": {
+                  "summary": "Slide de comparação",
+                  "value": {
+                    "presentation_id": "abc-123",
+                    "template": "comparison",
+                    "data": { "title": "React vs Vue", "left_title": "React", "left_items": ["JSX", "Virtual DOM"], "right_title": "Vue", "right_items": ["Templates", "Reactivity"] }
+                  }
+                },
+                "bio": {
+                  "summary": "Slide de bio",
+                  "value": {
+                    "presentation_id": "abc-123",
+                    "template": "bio",
+                    "data": { "title": "Sobre mim", "bullets": ["Dev Full Stack", "Open Source"], "github_username": "sschonss" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Slide criado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Slide" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/slides/{id}": {
+      "put": {
+        "tags": ["Slides"],
+        "summary": "Atualizar slide",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "template": { "$ref": "#/components/schemas/SlideTemplate" },
+                  "data": { "type": "object" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Atualizado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Success" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Slides"],
+        "summary": "Deletar slide",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Success" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/slides/reorder": {
+      "put": {
+        "tags": ["Slides"],
+        "summary": "Reordenar slides",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["slides"],
+                "properties": {
+                  "slides": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "order": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reordenado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Success" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/themes": {
+      "get": {
+        "tags": ["Themes"],
+        "summary": "Listar temas",
+        "responses": {
+          "200": {
+            "description": "Lista de temas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Theme" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Themes"],
+        "summary": "Criar tema",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "config"],
+                "properties": {
+                  "name": { "type": "string", "example": "ocean" },
+                  "config": { "$ref": "#/components/schemas/ThemeConfig" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tema criado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Theme" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/themes/{id}": {
+      "get": {
+        "tags": ["Themes"],
+        "summary": "Detalhes do tema",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tema",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Theme" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Themes"],
+        "summary": "Atualizar tema",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "config": { "$ref": "#/components/schemas/ThemeConfig" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Atualizado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Theme" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/search": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Buscar usuários",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string", "minLength": 2 }, "description": "Termo de busca (mín. 2 caracteres)" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/User" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{username}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Perfil do usuário",
+        "parameters": [
+          { "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "404": { "description": "Usuário não encontrado" }
+        }
+      }
+    },
+    "/api/users/{username}/presentations": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Apresentações públicas do usuário",
+        "parameters": [
+          { "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de apresentações públicas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PresentationSummary" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/generate": {
+      "post": {
+        "tags": ["Export"],
+        "summary": "Gerar markdown",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["presentation_id"],
+                "properties": {
+                  "presentation_id": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Markdown gerado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "markdown": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/export-bundle": {
+      "get": {
+        "tags": ["Export"],
+        "summary": "Exportar bundle .slidebuilder",
+        "description": "Retorna a apresentação em formato JSON para backup/importação.",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bundle JSON",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ImportBundle" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/{id}": {
+      "get": {
+        "tags": ["Sync"],
+        "summary": "Estado do presenter",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado atual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "slideIndex": { "type": "integer" },
+                    "zoomLevel": { "type": "number" },
+                    "updatedAt": { "type": "string", "nullable": true }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Sync"],
+        "summary": "Atualizar estado do presenter",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "slideIndex": { "type": "integer" },
+                  "zoomLevel": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Atualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "ok": { "type": "boolean" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Status do serviço",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "timestamp": { "type": "string" },
+                    "env": { "type": "object" },
+                    "db": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "nuxt-session",
+        "description": "Cookie de sessão obtido via login (GitHub OAuth ou dev-login)"
+      }
+    },
+    "schemas": {
+      "Success": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true }
+        }
+      },
+      "SlideTemplate": {
+        "type": "string",
+        "enum": ["cover", "section", "content", "diagram", "code", "comparison", "bio", "credits"]
+      },
+      "CoverData": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "Minha Apresentação" },
+          "subtitle": { "type": "string", "example": "Uma introdução ao tema" },
+          "author": { "type": "string", "example": "Luiz Schons" }
+        }
+      },
+      "SectionData": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "Parte 1" },
+          "section_number": { "type": "string", "example": "01" }
+        }
+      },
+      "ContentData": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "Tópicos Principais" },
+          "bullets": { "type": "array", "items": { "type": "string" }, "example": ["Item 1", "Item 2", "Item 3"] },
+          "quote": { "type": "string", "example": "Uma citação inspiradora" }
+        }
+      },
+      "CodeData": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "Hello World" },
+          "code": { "type": "string", "example": "console.log('hello')" },
+          "language": { "type": "string", "example": "javascript" },
+          "note": { "type": "string", "example": "Exemplo simples" }
+        }
+      },
+      "DiagramData": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "diagram_type": { "type": "string", "enum": ["mermaid", "excalidraw", "image", "embed"] },
+          "mermaid_code": { "type": "string", "example": "graph TD\n  A-->B" },
+          "excalidraw_svg": { "type": "string" },
+          "caption": { "type": "string" }
+        }
+      },
+      "ComparisonData": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "React vs Vue" },
+          "left_title": { "type": "string", "example": "React" },
+          "left_items": { "type": "array", "items": { "type": "string" }, "example": ["JSX", "Virtual DOM"] },
+          "right_title": { "type": "string", "example": "Vue" },
+          "right_items": { "type": "array", "items": { "type": "string" }, "example": ["Templates", "Reactivity"] }
+        }
+      },
+      "BioData": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "Sobre mim" },
+          "bullets": { "type": "array", "items": { "type": "string" }, "example": ["Dev Full Stack", "Open Source lover"] },
+          "photo_url": { "type": "string" },
+          "github_username": { "type": "string", "example": "sschonss" }
+        }
+      },
+      "CreditsData": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Obrigado!" },
+          "repo_url": { "type": "string", "example": "https://github.com/sschonss/slide-builder" }
+        }
+      },
+      "Slide": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "presentation_id": { "type": "string" },
+          "order": { "type": "integer" },
+          "template": { "$ref": "#/components/schemas/SlideTemplate" },
+          "data": { "type": "object", "description": "Dados variam por template (CoverData, ContentData, CodeData, etc.)" },
+          "notes": { "type": "string", "nullable": true }
+        }
+      },
+      "Presentation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "theme_id": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PresentationSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "theme_id": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "slide_count": { "type": "integer" }
+        }
+      },
+      "PresentationFull": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "theme_id": { "type": "string" },
+          "user_id": { "type": "string" },
+          "visibility": { "type": "string", "enum": ["public", "private"] },
+          "isOwner": { "type": "boolean" },
+          "slides": { "type": "array", "items": { "$ref": "#/components/schemas/Slide" } },
+          "theme": { "$ref": "#/components/schemas/Theme" }
+        }
+      },
+      "ThemeConfig": {
+        "type": "object",
+        "properties": {
+          "colors": {
+            "type": "object",
+            "properties": {
+              "background": { "type": "string", "example": "#1a1a2e" },
+              "primary": { "type": "string", "example": "#e94560" },
+              "secondary": { "type": "string", "example": "#533483" },
+              "text": { "type": "string", "example": "#ffffff" }
+            }
+          },
+          "fonts": {
+            "type": "object",
+            "properties": {
+              "heading": { "type": "string", "example": "Inter" },
+              "body": { "type": "string", "example": "Inter" },
+              "code": { "type": "string", "example": "JetBrains Mono" }
+            }
+          },
+          "logo": { "type": "string" },
+          "codeTheme": { "type": "string", "example": "github-dark" }
+        }
+      },
+      "Theme": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "config": { "$ref": "#/components/schemas/ThemeConfig" }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "username": { "type": "string" },
+          "name": { "type": "string" },
+          "avatar_url": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ImportBundle": {
+        "type": "object",
+        "properties": {
+          "format": { "type": "string", "example": "slidebuilder" },
+          "version": { "type": "integer", "example": 1 },
+          "exported_at": { "type": "string", "format": "date-time" },
+          "presentation": {
+            "type": "object",
+            "properties": { "title": { "type": "string" } }
+          },
+          "theme": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "config": { "$ref": "#/components/schemas/ThemeConfig" }
+            }
+          },
+          "slides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "order": { "type": "integer" },
+                "template": { "$ref": "#/components/schemas/SlideTemplate" },
+                "data": { "type": "object" },
+                "notes": { "type": "string", "nullable": true }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

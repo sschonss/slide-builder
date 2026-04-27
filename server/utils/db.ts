@@ -42,6 +42,11 @@ async function _initDbInternal() {
     const client = getClient()
     console.log('[slide-builder] Running schema migrations...')
 
+    // Match Turso behavior: don't enforce FK constraints
+    if (import.meta.dev) {
+      await client.execute({ sql: 'PRAGMA foreign_keys = OFF', args: [] })
+    }
+
     await client.batch([
       { sql: `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE, name TEXT NOT NULL, avatar_url TEXT NOT NULL DEFAULT '', created_at DATETIME NOT NULL DEFAULT (datetime('now')), updated_at DATETIME NOT NULL DEFAULT (datetime('now')))`, args: [] },
       { sql: `CREATE TABLE IF NOT EXISTS themes (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, config TEXT NOT NULL DEFAULT '{}')`, args: [] },
