@@ -71,6 +71,18 @@ async function reorderSlides(newOrder: { id: string; order: number }[]) {
   })
 }
 
+async function duplicateSlide(slideId: string) {
+  await withSaving(async () => {
+    const result = await $fetch(`/api/presentations/${presentationId}/slides/${slideId}/duplicate`, {
+      method: 'POST',
+    })
+    await refresh()
+    const newIndex = slides.value.findIndex(s => s.id === (result as any).id)
+    if (newIndex >= 0) currentSlideIndex.value = newIndex
+    await regenerateMarkdown()
+  })
+}
+
 async function regenerateMarkdown() {
   try {
     await $fetch('/api/generate', { method: 'POST', body: { presentation_id: presentationId } })
@@ -160,6 +172,7 @@ async function handleExport() {
           @select="selectSlide"
           @add="addSlide"
           @delete="deleteSlide"
+          @duplicate="duplicateSlide"
           @reorder="reorderSlides"
         />
       </div>

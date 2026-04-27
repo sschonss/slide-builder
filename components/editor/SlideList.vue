@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { VueDraggable } from 'vue-draggable-plus'
-import { GripVertical } from 'lucide-vue-next'
+import { GripVertical, Copy } from 'lucide-vue-next'
 import type { Slide } from '~/types'
 
 const props = defineProps<{ slides: Slide[]; currentIndex: number }>()
@@ -8,6 +8,7 @@ const emit = defineEmits<{
   (e: 'select', index: number): void
   (e: 'add', template: string): void
   (e: 'delete', id: string): void
+  (e: 'duplicate', id: string): void
   (e: 'reorder', newOrder: { id: string; order: number }[]): void
 }>()
 
@@ -56,6 +57,7 @@ const TEMPLATE_COLORS: Record<string, string> = {
           </div>
           <div class="slide-title">{{ (slide.data as any).title || '(sem título)' }}</div>
         </div>
+        <button class="duplicate-btn" @click.stop="emit('duplicate', slide.id)" title="Duplicar"><Copy :size="12" /></button>
         <button v-if="slides.length > 1" class="delete-btn" @click.stop="emit('delete', slide.id)">×</button>
       </div>
     </VueDraggable>
@@ -81,6 +83,9 @@ const TEMPLATE_COLORS: Record<string, string> = {
 .slide-title { font-size: 11px; color: #e6edf3; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .delete-btn { position: absolute; top: 4px; right: 4px; background: none; border: none; color: #f85149; font-size: 14px; cursor: pointer; opacity: 0; padding: 2px 4px; }
 .delete-btn:hover { opacity: 1 !important; }
+.duplicate-btn { position: absolute; top: 4px; right: 22px; background: none; border: none; color: #8b949e; font-size: 14px; cursor: pointer; opacity: 0; padding: 2px 4px; }
+.duplicate-btn:hover { opacity: 1 !important; color: #58a6ff; }
+.slide-item:hover .duplicate-btn { opacity: 0.6; }
 .add-btn { background: none; border: 1px dashed #30363d; border-radius: 4px; padding: 10px; color: #8b949e; cursor: pointer; font-size: 12px; margin-top: 4px; flex-shrink: 0; }
 .add-btn:hover { border-color: #e94560; color: #e94560; }
 </style>
