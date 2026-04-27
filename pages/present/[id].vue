@@ -156,7 +156,7 @@ onUnmounted(() => {
 .slide-container :deep(.slide) {
   border-radius: 0;
   box-shadow: none;
-  padding: 60px 80px;
+  padding: 32px 80px;
   overflow: hidden;
 }
 

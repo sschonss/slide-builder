@@ -146,7 +146,7 @@ watch(mermaidCode, async (code) => {
 
 <style scoped>
 .preview-wrapper { width: 100%; max-width: 720px; aspect-ratio: 16/9; overflow: hidden; }
-.slide { width: 100%; height: 100%; border-radius: 8px; padding: 40px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+.slide { width: 100%; height: 100%; border-radius: 8px; padding: 24px 40px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
 h1 { font-size: 28px; margin-bottom: 8px; }
 h2 { font-size: 18px; opacity: 0.7; }
 
