@@ -206,6 +206,49 @@ onUnmounted(() => {
   max-height: 70vh;
 }
 
+/* Bio — fullscreen overrides */
+.slide-container :deep(.bio-slide) {
+  gap: 80px;
+}
+.slide-container :deep(.avatar) {
+  width: 320px;
+  height: 320px;
+  border-width: 4px;
+}
+.slide-container :deep(.avatar-placeholder) {
+  width: 320px;
+  height: 320px;
+  font-size: 96px;
+}
+.slide-container :deep(.bio-info h1) {
+  font-size: 52px;
+  margin-bottom: 20px;
+}
+.slide-container :deep(.bio-info ul) {
+  font-size: 32px;
+  line-height: 2;
+  padding-left: 40px;
+}
+
+/* Credits — fullscreen overrides */
+.slide-container :deep(.credits-slide) {
+  gap: 40px;
+}
+.slide-container :deep(.credits-badge) {
+  font-size: 64px;
+  letter-spacing: 4px;
+}
+.slide-container :deep(.credits-message) {
+  font-size: 36px;
+}
+.slide-container :deep(.qr-img) {
+  width: 260px;
+  height: 260px;
+}
+.slide-container :deep(.credits-url) {
+  font-size: 22px;
+}
+
 .slide-counter {
   position: fixed;
   bottom: 16px;

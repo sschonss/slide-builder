@@ -178,16 +178,16 @@ function renderSlideHtml(slide: any, theme: any, diagramSvg?: string, bioImage?:
     case 'bio':
       const bioPhotoSrc = bioImage || (data.photo_url || (data.github_username ? `https://github.com/${data.github_username}.png` : ''))
       return `
-        <div style="display:flex;gap:40px;align-items:center;width:100%;">
+        <div style="display:flex;gap:60px;align-items:center;width:100%;padding:20px;">
           <div style="flex-shrink:0;">
             ${bioPhotoSrc
-              ? `<img src="${bioPhotoSrc}" style="width:200px;height:200px;border-radius:50%;object-fit:cover;border:3px solid ${primary};" crossorigin="anonymous" />`
-              : `<div style="width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:56px;opacity:0.3;">?</div>`
+              ? `<img src="${bioPhotoSrc}" style="width:280px;height:280px;border-radius:50%;object-fit:cover;border:4px solid ${primary};" crossorigin="anonymous" />`
+              : `<div style="width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:80px;opacity:0.3;">?</div>`
             }
           </div>
           <div style="flex:1;text-align:left;">
-            <h1 style="font-size:32px;font-weight:700;color:${primary};margin-bottom:16px;">${esc(data.title || '')}</h1>
-            <ul style="list-style:disc;padding-left:24px;font-size:20px;line-height:1.8;">
+            <h1 style="font-size:44px;font-weight:700;color:${primary};margin-bottom:20px;">${esc(data.title || '')}</h1>
+            <ul style="list-style:disc;padding-left:32px;font-size:28px;line-height:2;">
               ${(data.bullets || []).map((b: string) => `<li>${esc(b)}</li>`).join('')}
             </ul>
           </div>
@@ -195,11 +195,11 @@ function renderSlideHtml(slide: any, theme: any, diagramSvg?: string, bioImage?:
 
     case 'credits':
       return `
-        <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:24px;width:100%;">
-          <div style="font-size:40px;font-weight:700;letter-spacing:2px;">Slide Builder</div>
-          <p style="font-size:24px;opacity:0.7;">${esc(data.message || 'Feito com Slide Builder')}</p>
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.repo_url || 'https://github.com/sschonss/slide-builder')}&bgcolor=1a1a2e&color=ffffff" style="width:200px;height:200px;border-radius:8px;" />
-          <p style="font-size:16px;opacity:0.4;font-family:'JetBrains Mono',monospace;">${esc(data.repo_url || 'github.com/sschonss/slide-builder')}</p>
+        <div style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;width:100%;height:100%;">
+          <div style="font-size:56px;font-weight:700;letter-spacing:4px;">Slide Builder</div>
+          <p style="font-size:32px;opacity:0.7;">${esc(data.message || 'Feito com Slide Builder')}</p>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(data.repo_url || 'https://github.com/sschonss/slide-builder')}&bgcolor=1a1a2e&color=ffffff" style="width:240px;height:240px;border-radius:8px;" />
+          <p style="font-size:20px;opacity:0.4;font-family:'JetBrains Mono',monospace;">${esc(data.repo_url || 'github.com/sschonss/slide-builder')}</p>
         </div>`
 
     default:
