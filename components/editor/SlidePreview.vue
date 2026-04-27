@@ -135,7 +135,7 @@ watch(mermaidCode, async (code) => {
           <div class="credits-badge">Slide Builder</div>
           <p class="credits-message">{{ (slide.data as CreditsData).message || 'Feito com Slide Builder' }}</p>
           <div class="credits-qr">
-            <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent((slide.data as CreditsData).repo_url || 'https://github.com/sschonss/slide-builder')}&bgcolor=1a1a2e&color=ffffff`" alt="QR Code" class="qr-img" />
+            <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent((slide.data as CreditsData).repo_url || 'https://github.com/sschonss/slide-builder')}&bgcolor=1a1a2e&color=ffffff`" alt="QR Code" class="qr-img" />
           </div>
           <p class="credits-url">{{ (slide.data as CreditsData).repo_url || 'github.com/sschonss/slide-builder' }}</p>
         </div>
@@ -181,16 +181,17 @@ h2 { font-size: 18px; opacity: 0.7; }
 .col h3 { font-size: 16px; margin-bottom: 8px; }
 .col ul { list-style: disc; padding-left: 16px; font-size: 13px; line-height: 1.6; }
 
-.bio-slide { display: flex; gap: 32px; align-items: center; width: 100%; }
+.bio-slide { display: flex; gap: 40px; align-items: center; width: 100%; }
 .bio-photo { flex-shrink: 0; }
-.avatar { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 3px solid currentColor; }
-.avatar-placeholder { width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 48px; opacity: 0.3; }
+.avatar { width: 200px; height: 200px; border-radius: 50%; object-fit: cover; border: 3px solid currentColor; }
+.avatar-placeholder { width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 56px; opacity: 0.3; }
 .bio-info { flex: 1; text-align: left; }
-.bio-info ul { list-style: disc; padding-left: 20px; font-size: 14px; line-height: 1.8; margin-top: 8px; }
+.bio-info h1 { font-size: 32px; margin-bottom: 12px; }
+.bio-info ul { list-style: disc; padding-left: 24px; font-size: 18px; line-height: 1.8; margin-top: 8px; }
 
-.credits-slide { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.credits-badge { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
-.credits-message { font-size: 16px; opacity: 0.7; }
-.qr-img { width: 120px; height: 120px; border-radius: 8px; }
-.credits-url { font-size: 11px; opacity: 0.4; font-family: 'JetBrains Mono', monospace; }
+.credits-slide { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.credits-badge { font-size: 36px; font-weight: 700; letter-spacing: 2px; }
+.credits-message { font-size: 22px; opacity: 0.7; }
+.qr-img { width: 160px; height: 160px; border-radius: 8px; }
+.credits-url { font-size: 14px; opacity: 0.4; font-family: 'JetBrains Mono', monospace; }
 </style>
