@@ -184,13 +184,39 @@ function handleKeydown(e: KeyboardEvent) {
   }
 }
 
+// Mobile detection and swipe support
+const isMobile = ref(false)
+const showMobileMenu = ref(false)
+let touchStartX = 0
+let touchStartY = 0
+
+function checkMobile() {
+  isMobile.value = window.innerWidth <= 480 || (window.innerWidth <= 600 && window.innerHeight > window.innerWidth)
+}
+
+function onTouchStart(e: TouchEvent) {
+  touchStartX = e.touches[0].clientX
+  touchStartY = e.touches[0].clientY
+}
+
+function onTouchEnd(e: TouchEvent) {
+  const dx = e.changedTouches[0].clientX - touchStartX
+  const dy = e.changedTouches[0].clientY - touchStartY
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
+    if (dx < 0) next()
+    else prev()
+  }
+}
+
 onMounted(() => {
   loadPrefs()
   initCache()
   init()
   checkCastSupport()
+  checkMobile()
   startTimer()
   window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('resize', checkMobile)
   document.addEventListener('click', handleSettingsOutside)
 })
 
@@ -199,6 +225,7 @@ onUnmounted(() => {
   stopCast()
   pauseTimer()
   window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('resize', checkMobile)
   document.removeEventListener('click', handleSettingsOutside)
 })
 
@@ -219,7 +246,67 @@ function handleSettingsOutside(e: Event) {
     <p>Apenas o autor pode controlar esta apresentação.</p>
     <NuxtLink :to="`/present/${presentationId}`" class="btn-audience">Abrir como audiência</NuxtLink>
   </div>
-  <div class="presenter-view" v-else>
+  <div class="presenter-view" v-else @touchstart="onTouchStart" @touchend="onTouchEnd">
+    <!-- MOBILE LAYOUT -->
+    <template v-if="isMobile">
+      <div class="mobile-header">
+        <button @click="goBack" class="ctrl-btn"><ArrowLeft :size="18" /></button>
+        <div class="mobile-timer" v-if="prefs.showTimer" :class="{ paused: !timerRunning }">
+          <Timer :size="16" /> {{ timerDisplay }}
+        </div>
+        <div class="mobile-slide-info">{{ currentSlideIndex + 1 }}/{{ slides.length }}</div>
+        <button @click.stop="showMobileMenu = !showMobileMenu" class="ctrl-btn"><Settings :size="18" /></button>
+      </div>
+
+      <!-- Mobile menu overlay -->
+      <div class="mobile-menu-overlay" v-if="showMobileMenu" @click="showMobileMenu = false">
+        <div class="mobile-menu" @click.stop>
+          <label class="settings-toggle"><input type="checkbox" :checked="prefs.showNextSlide" @change="togglePref('showNextSlide')" /><span>Proximo slide</span></label>
+          <label class="settings-toggle"><input type="checkbox" :checked="prefs.showNotes" @change="togglePref('showNotes')" /><span>Notas</span></label>
+          <label class="settings-toggle"><input type="checkbox" :checked="prefs.showTimer" @change="togglePref('showTimer')" /><span>Cronometro</span></label>
+          <div class="settings-divider" />
+          <div class="settings-label">Tamanho das notas</div>
+          <div class="notes-size-controls">
+            <button @click="adjustNotesFontSize(-2)" class="size-btn" :disabled="prefs.notesFontSize <= 12">A-</button>
+            <span class="size-value">{{ prefs.notesFontSize }}px</span>
+            <button @click="adjustNotesFontSize(2)" class="size-btn" :disabled="prefs.notesFontSize >= 36">A+</button>
+          </div>
+          <div class="settings-divider" />
+          <div class="mobile-menu-actions">
+            <button @click="toggleTimer" class="ctrl-btn"><component :is="timerRunning ? Pause : Play" :size="16" /> {{ timerRunning ? 'Pausar' : 'Retomar' }}</button>
+            <button @click="resetTimer" class="ctrl-btn"><RotateCcw :size="16" /> Resetar</button>
+            <button @click="copyAudienceLink; showMobileMenu = false" class="ctrl-btn"><component :is="linkCopied ? Check : Link" :size="16" /> {{ linkCopied ? 'Copiado!' : 'Copiar link' }}</button>
+            <button @click="forceSync" class="ctrl-btn sync-btn" :class="{ spinning: syncing }"><RefreshCw :size="16" /> Sincronizar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compact slide preview -->
+      <div class="mobile-slide-preview">
+        <div class="slide-frame">
+          <EditorSlidePreview v-if="currentSlide" :slide="currentSlide" :theme="theme" />
+        </div>
+      </div>
+
+      <!-- Notes (main content on mobile) -->
+      <div class="mobile-notes" v-if="prefs.showNotes">
+        <div class="notes-content" v-if="notes" :style="{ fontSize: prefs.notesFontSize + 'px' }">{{ notes }}</div>
+        <div class="notes-empty" v-else>Sem notas para este slide</div>
+      </div>
+
+      <!-- Big mobile navigation buttons -->
+      <div class="mobile-nav">
+        <button @click="prev" :disabled="currentSlideIndex <= 0" class="mobile-nav-btn prev">
+          <ChevronLeft :size="32" />
+        </button>
+        <button @click="next" :disabled="currentSlideIndex >= slides.length - 1" class="mobile-nav-btn next">
+          <ChevronRight :size="32" />
+        </button>
+      </div>
+    </template>
+
+    <!-- DESKTOP LAYOUT -->
+    <template v-else>
     <!-- Top: Slides -->
     <div class="slides-row">
       <div class="current-slide-box" :class="{ 'full-width': !prefs.showNextSlide }">
@@ -305,6 +392,7 @@ function handleSettingsOutside(e: Event) {
       <div class="notes-content" v-if="notes" :style="{ fontSize: prefs.notesFontSize + 'px' }">{{ notes }}</div>
       <div class="notes-empty" v-else>Sem notas para este slide</div>
     </div>
+    </template>
   </div>
 </template>
 
@@ -692,5 +780,141 @@ function handleSettingsOutside(e: Event) {
   color: #8b949e;
   min-width: 36px;
   text-align: center;
+}
+
+/* ===== MOBILE STYLES ===== */
+.mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.mobile-timer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: #58a6ff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mobile-timer.paused {
+  color: #f0883e;
+}
+
+.mobile-slide-info {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #e6edf3;
+}
+
+.mobile-slide-preview {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  max-height: 30vh;
+}
+
+.mobile-slide-preview .slide-frame {
+  height: 100%;
+  max-height: 25vh;
+}
+
+.mobile-notes {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  -webkit-overflow-scrolling: touch;
+  border-top: 1px solid #30363d;
+}
+
+.mobile-nav {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  flex-shrink: 0;
+  border-top: 1px solid #30363d;
+  background: #161b22;
+}
+
+.mobile-nav-btn {
+  flex: 1;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #30363d;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e6edf3;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: background 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mobile-nav-btn:active:not(:disabled) {
+  background: rgba(88, 166, 255, 0.2);
+  border-color: #58a6ff;
+}
+
+.mobile-nav-btn:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
+
+.mobile-nav-btn.next {
+  background: rgba(35, 134, 54, 0.15);
+  border-color: #238636;
+}
+
+.mobile-nav-btn.next:active:not(:disabled) {
+  background: rgba(35, 134, 54, 0.4);
+}
+
+/* Mobile menu overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.mobile-menu {
+  background: #1c2128;
+  border: 1px solid #30363d;
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
+  padding: 20px 20px 32px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.mobile-menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobile-menu-actions .ctrl-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: flex-start;
+  padding: 12px 14px;
+  font-size: 14px;
 }
 </style>
