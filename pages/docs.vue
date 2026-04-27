@@ -4,11 +4,11 @@ import { onMounted, ref } from 'vue'
 const swaggerContainer = ref<HTMLDivElement | null>(null)
 
 onMounted(async () => {
-  const SwaggerUI = (await import('swagger-ui-dist')).default
+  const { SwaggerUIBundle } = await import('swagger-ui-dist')
   await import('swagger-ui-dist/swagger-ui.css')
 
   if (swaggerContainer.value) {
-    SwaggerUI({
+    SwaggerUIBundle({
       domNode: swaggerContainer.value,
       url: '/openapi.json',
       deepLinking: true,
