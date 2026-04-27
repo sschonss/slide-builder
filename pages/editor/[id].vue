@@ -11,6 +11,8 @@ const { data: presentation, refresh } = useFetch(`/api/presentations/${presentat
 const currentSlideIndex = ref(0)
 const showThemeEditor = ref(false)
 const mobilePanel = ref<'list' | 'preview' | 'properties'>('preview')
+const showShortcutHelp = ref(false)
+const undoRedo = useUndoRedo()
 
 const localEdits = ref<Record<string, Partial<Slide>>>({})
 
@@ -47,6 +49,10 @@ async function addSlide(template: string) {
 
 function updateSlide(_slideId: string, updates: Partial<Slide>) {
   const id = _slideId
+  const slide = slides.value.find(s => s.id === id)
+  if (slide && updates.data) {
+    undoRedo.pushState(id, slide.data, updates.data)
+  }
   localEdits.value[id] = { ...localEdits.value[id], ...updates }
 }
 
@@ -159,6 +165,42 @@ function handleImageDrop(payload: { path: string; filename: string }) {
 
   updateSlide(currentSlide.value.id, { data })
 }
+
+function handleUndo() {
+  if (!currentSlide.value) return
+  const prev = undoRedo.undo(currentSlide.value.id)
+  if (prev) {
+    localEdits.value[currentSlide.value.id] = {
+      ...localEdits.value[currentSlide.value.id],
+      data: prev,
+    }
+  }
+}
+
+function handleRedo() {
+  if (!currentSlide.value) return
+  const next = undoRedo.redo(currentSlide.value.id)
+  if (next) {
+    localEdits.value[currentSlide.value.id] = {
+      ...localEdits.value[currentSlide.value.id],
+      data: next,
+    }
+  }
+}
+
+const canUndo = computed(() => currentSlide.value ? undoRedo.canUndo(currentSlide.value.id) : false)
+const canRedo = computed(() => currentSlide.value ? undoRedo.canRedo(currentSlide.value.id) : false)
+
+useEditorShortcuts({
+  onSave: handleSave,
+  onDuplicate: () => { if (currentSlide.value) duplicateSlide(currentSlide.value.id) },
+  onDelete: () => { if (currentSlide.value && slides.value.length > 1) deleteSlide(currentSlide.value.id) },
+  onNavigate: navigateSlide,
+  onToggleHelp: () => { showShortcutHelp.value = !showShortcutHelp.value },
+  onUndo: handleUndo,
+  onRedo: handleRedo,
+})
+
 </script>
 
 <template>
@@ -169,10 +211,15 @@ function handleImageDrop(payload: { path: string; filename: string }) {
       :total-slides="slides.length"
       :presentation-id="presentationId"
       :has-unsaved-changes="hasUnsavedChanges"
+      :can-undo="canUndo"
+      :can-redo="canRedo"
       @present="handlePresent"
       @save="handleSave"
       @open-theme="showThemeEditor = true"
       @navigate="navigateSlide"
+      @undo="handleUndo"
+      @redo="handleRedo"
+      @toggle-help="showShortcutHelp = !showShortcutHelp"
     />
 
     <div class="mobile-tabs">
@@ -224,6 +271,9 @@ function handleImageDrop(payload: { path: string; filename: string }) {
       @close="showThemeEditor = false"
       @saved="refresh()"
     />
+
+    <!-- Shortcut Help Modal -->
+    <EditorShortcutHelp v-if="showShortcutHelp" @close="showShortcutHelp = false" />
 
     <!-- Git-style Change Log -->
     <EditorChangeLog :presentation-id="presentationId" @reverted="refresh(); currentSlideIndex = 0" />

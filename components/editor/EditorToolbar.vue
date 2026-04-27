@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { Play, Download, Save, Palette, ChevronLeft, ChevronRight, ChevronDown, FileText, Package, Loader2 } from 'lucide-vue-next'
+import { Play, Download, Save, Palette, ChevronLeft, ChevronRight, ChevronDown, FileText, Package, Loader2, Undo2, Redo2, Keyboard } from 'lucide-vue-next'
 
-const props = defineProps<{ title: string; slideIndex: number; totalSlides: number; presentationId: string; hasUnsavedChanges?: boolean }>()
+const props = defineProps<{ title: string; slideIndex: number; totalSlides: number; presentationId: string; hasUnsavedChanges?: boolean; canUndo?: boolean; canRedo?: boolean }>()
 const emit = defineEmits<{
   (e: 'present'): void
   (e: 'openTheme'): void
   (e: 'navigate', direction: 'prev' | 'next'): void
   (e: 'save'): void
+  (e: 'undo'): void
+  (e: 'redo'): void
+  (e: 'toggleHelp'): void
 }>()
 
 const showDownloadMenu = ref(false)
@@ -71,6 +74,9 @@ async function downloadBundle() {
       <button class="nav-btn" @click="emit('navigate', 'prev')" :disabled="slideIndex <= 0"><ChevronLeft :size="14" /></button>
       <span class="slide-count">{{ slideIndex + 1 }} / {{ totalSlides }}</span>
       <button class="nav-btn" @click="emit('navigate', 'next')" :disabled="slideIndex >= totalSlides - 1"><ChevronRight :size="14" /></button>
+      <div class="separator" />
+      <button class="nav-btn" @click="emit('undo')" :disabled="!canUndo" title="Desfazer (Ctrl+Z)"><Undo2 :size="14" /></button>
+      <button class="nav-btn" @click="emit('redo')" :disabled="!canRedo" title="Refazer (Ctrl+Shift+Z)"><Redo2 :size="14" /></button>
     </div>
     <div class="toolbar-right">
       <button class="btn btn-save" :class="{ 'has-changes': hasUnsavedChanges }" @click="handleSave" :disabled="saving">
@@ -90,6 +96,7 @@ async function downloadBundle() {
           <button class="dropdown-item" @click="downloadBundle"><Package :size="14" /> Arquivo .slidebuilder</button>
         </div>
       </div>
+      <button class="btn" @click="emit('toggleHelp')" title="Atalhos (?)"><Keyboard :size="13" /></button>
       <button class="btn" @click="emit('openTheme')"><Palette :size="13" /> Tema</button>
     </div>
 
@@ -114,6 +121,7 @@ async function downloadBundle() {
 .back:hover { color: #e6edf3; }
 .title { font-size: 14px; font-weight: 600; }
 .slide-count { font-size: 12px; color: #8b949e; min-width: 50px; text-align: center; }
+.separator { width: 1px; height: 20px; background: #30363d; margin: 0 4px; }
 .btn, .nav-btn { background: rgba(255,255,255,0.08); color: #e6edf3; border: 1px solid #30363d; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 5px; }
 .btn:hover, .nav-btn:hover { background: rgba(255,255,255,0.15); }
 .btn:disabled, .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
