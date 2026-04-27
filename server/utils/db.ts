@@ -40,7 +40,7 @@ async function _initDbInternal() {
       { sql: `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE, name TEXT NOT NULL, avatar_url TEXT NOT NULL DEFAULT '', created_at DATETIME NOT NULL DEFAULT (datetime('now')), updated_at DATETIME NOT NULL DEFAULT (datetime('now')))`, args: [] },
       { sql: `CREATE TABLE IF NOT EXISTS themes (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, config TEXT NOT NULL DEFAULT '{}')`, args: [] },
       { sql: `CREATE TABLE IF NOT EXISTS presentations (id TEXT PRIMARY KEY, title TEXT NOT NULL, theme_id TEXT NOT NULL REFERENCES themes(id), created_at DATETIME NOT NULL DEFAULT (datetime('now')), updated_at DATETIME NOT NULL DEFAULT (datetime('now')))`, args: [] },
-      { sql: `CREATE TABLE IF NOT EXISTS slides (id TEXT PRIMARY KEY, presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE, "order" INTEGER NOT NULL DEFAULT 0, template TEXT NOT NULL CHECK(template IN ('cover','section','content','diagram','code','comparison')), data TEXT NOT NULL DEFAULT '{}', notes TEXT)`, args: [] },
+      { sql: `CREATE TABLE IF NOT EXISTS slides (id TEXT PRIMARY KEY, presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE, "order" INTEGER NOT NULL DEFAULT 0, template TEXT NOT NULL CHECK(template IN ('cover','section','content','diagram','code','comparison','bio','credits')), data TEXT NOT NULL DEFAULT '{}', notes TEXT)`, args: [] },
       { sql: `CREATE TABLE IF NOT EXISTS assets (id TEXT PRIMARY KEY, presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE, filename TEXT NOT NULL, path TEXT NOT NULL, type TEXT NOT NULL CHECK(type IN ('image','video','logo')))`, args: [] },
       { sql: `CREATE TABLE IF NOT EXISTS change_log (id INTEGER PRIMARY KEY AUTOINCREMENT, presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE, action TEXT NOT NULL, description TEXT NOT NULL, slide_hash TEXT, snapshot TEXT, created_at DATETIME NOT NULL DEFAULT (datetime('now')))`, args: [] },
       { sql: `CREATE TABLE IF NOT EXISTS presenter_sync (presentation_id TEXT PRIMARY KEY REFERENCES presentations(id) ON DELETE CASCADE, slide_index INTEGER NOT NULL DEFAULT 0, updated_at DATETIME NOT NULL DEFAULT (datetime('now')))`, args: [] },
@@ -57,6 +57,23 @@ async function _initDbInternal() {
       } catch {
         // Column already exists — skip
       }
+    }
+
+    // Migrate slides table to support bio/credits templates
+    try {
+      const tableInfo = await client.execute({ sql: `SELECT sql FROM sqlite_master WHERE type='table' AND name='slides'`, args: [] })
+      const createSql = tableInfo.rows[0]?.sql as string || ''
+      if (createSql.includes("'comparison')") && !createSql.includes("'bio'")) {
+        await client.batch([
+          { sql: `CREATE TABLE slides_new (id TEXT PRIMARY KEY, presentation_id TEXT NOT NULL REFERENCES presentations(id) ON DELETE CASCADE, "order" INTEGER NOT NULL DEFAULT 0, template TEXT NOT NULL CHECK(template IN ('cover','section','content','diagram','code','comparison','bio','credits')), data TEXT NOT NULL DEFAULT '{}', notes TEXT)`, args: [] },
+          { sql: `INSERT INTO slides_new SELECT * FROM slides`, args: [] },
+          { sql: `DROP TABLE slides`, args: [] },
+          { sql: `ALTER TABLE slides_new RENAME TO slides`, args: [] },
+        ], 'write')
+        console.log('[slide-builder] Migrated slides table to support bio/credits templates')
+      }
+    } catch (e) {
+      console.log('[slide-builder] Slides migration check:', e)
     }
 
     console.log('[slide-builder] Schema ready, seeding default theme...')
