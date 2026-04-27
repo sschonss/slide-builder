@@ -141,6 +141,24 @@ async function handleExport() {
     }
   })
 }
+
+function handleImageDrop(payload: { path: string; filename: string }) {
+  if (!currentSlide.value) return
+  const template = currentSlide.value.template
+  const data = { ...(currentSlide.value.data as any) }
+
+  if (template === 'cover') {
+    data.background_image = payload.path
+  } else if (template === 'bio') {
+    data.photo_url = payload.path
+  } else if (template === 'content' || template === 'diagram') {
+    data.image = payload.path
+  } else {
+    return
+  }
+
+  updateSlide(currentSlide.value.id, { data })
+}
 </script>
 
 <template>
@@ -183,6 +201,8 @@ async function handleExport() {
           v-if="currentSlide"
           :slide="currentSlide"
           :theme="presentation.theme?.config"
+          :presentation-id="presentationId"
+          @image-dropped="handleImageDrop"
         />
       </div>
 

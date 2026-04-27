@@ -2,7 +2,8 @@
 import type { Slide, ThemeConfig, CoverData, SectionData, ContentData, DiagramData, CodeData, ComparisonData, BioData, CreditsData } from '~/types'
 import mermaid from 'mermaid'
 
-const props = defineProps<{ slide: Slide; theme?: ThemeConfig }>()
+const props = defineProps<{ slide: Slide; theme?: ThemeConfig; presentationId?: string }>()
+const emit = defineEmits<{ (e: 'image-dropped', payload: { path: string; filename: string }): void }>()
 
 const bg = computed(() => props.theme?.colors?.background || '#1a1a2e')
 const primary = computed(() => props.theme?.colors?.primary || '#e94560')
@@ -30,11 +31,52 @@ watch(mermaidCode, async (code) => {
     mermaidSvg.value = ''
   }
 }, { immediate: true })
+
+const isDragging = ref(false)
+
+function onDragOver(e: DragEvent) {
+  e.preventDefault()
+  if (e.dataTransfer?.types.includes('Files')) {
+    isDragging.value = true
+  }
+}
+
+function onDragLeave() {
+  isDragging.value = false
+}
+
+async function onDrop(e: DragEvent) {
+  e.preventDefault()
+  isDragging.value = false
+
+  const file = e.dataTransfer?.files[0]
+  if (!file || !file.type.startsWith('image/')) return
+  if (!props.presentationId) return
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('presentation_id', props.presentationId)
+  formData.append('type', 'image')
+
+  try {
+    const result = await $fetch<{ path: string; filename: string }>('/api/assets/upload', {
+      method: 'POST',
+      body: formData,
+    })
+    emit('image-dropped', result)
+  } catch {
+    // Upload failed silently
+  }
+}
 </script>
 
 <template>
   <div class="preview-wrapper">
-    <div class="slide" :style="{ background: bg, color: textColor }">
+    <div class="slide" :style="{ background: bg, color: textColor }"
+         @dragover="onDragOver" @dragleave="onDragLeave" @drop="onDrop">
+      <div v-if="isDragging" class="drop-overlay">
+        <span>📷 Solte a imagem aqui</span>
+      </div>
       <!-- Cover -->
       <template v-if="slide.template === 'cover'">
         <div class="cover">
@@ -146,7 +188,8 @@ watch(mermaidCode, async (code) => {
 
 <style scoped>
 .preview-wrapper { width: 100%; max-width: 720px; aspect-ratio: 16/9; overflow: hidden; }
-.slide { width: 100%; height: 100%; border-radius: 8px; padding: 16px 40px; display: flex; align-items: flex-start; justify-content: flex-start; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+.slide { width: 100%; height: 100%; border-radius: 8px; padding: 16px 40px; display: flex; align-items: flex-start; justify-content: flex-start; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.4); position: relative; }
+.drop-overlay { position: absolute; inset: 0; background: rgba(233, 69, 96, 0.15); border: 2px dashed #e94560; border-radius: 8px; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 16px; font-weight: 600; }
 h1 { font-size: 28px; margin-bottom: 8px; }
 h2 { font-size: 18px; opacity: 0.7; }
 
