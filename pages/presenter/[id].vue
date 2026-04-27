@@ -729,58 +729,64 @@ function handleSettingsOutside(e: Event) {
 }
 
 @media (max-width: 640px) {
+  .presenter-view {
+    height: 100dvh; /* dynamic viewport height — excludes browser chrome */
+  }
+  /* Reorder: slide → nav buttons → timer → notes */
+  .slides-row { order: 1; }
+  .mobile-presenter-nav { order: 2; }
+  .controls-row { order: 3; }
+  .notes-row { order: 4; }
+
   .slides-row {
     flex-direction: column;
     padding: 8px;
-    gap: 8px;
+    gap: 4px;
+    flex: none;
   }
   .current-slide-box {
     flex: none;
-    max-height: 25vh;
+    max-height: 30vh;
   }
   .next-slide-box {
     display: none;
   }
   .controls-row {
-    padding: 6px 8px;
+    padding: 4px 8px;
     gap: 6px;
     flex-wrap: wrap;
     justify-content: center;
+    flex-shrink: 0;
   }
   .timer {
     font-size: 18px;
     min-width: auto;
   }
-  .nav-controls {
-    display: none;
-  }
-  .action-controls {
-    display: none;
-  }
-  .back-btn {
-    display: none;
-  }
-  .slide-count {
-    font-size: 14px;
-  }
+  .nav-controls { display: none; }
+  .action-controls { display: none; }
+  .back-btn { display: none; }
+
   .notes-row {
     flex: 1;
+    min-height: 0;
     max-height: none;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
+
   .mobile-presenter-nav {
     display: flex;
     gap: 8px;
-    padding: 12px;
+    padding: 8px 12px;
     flex-shrink: 0;
     border-top: 1px solid #30363d;
+    border-bottom: 1px solid #30363d;
     background: #161b22;
     align-items: center;
   }
   .mobile-nav-btn {
     flex: 1;
-    padding: 18px;
+    padding: 14px;
     border-radius: 12px;
     border: 2px solid #30363d;
     background: rgba(255, 255, 255, 0.06);
