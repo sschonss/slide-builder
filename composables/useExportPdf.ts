@@ -46,10 +46,11 @@ export function useExportPdf() {
             diagramSvgs[i] = data.excalidraw_svg
           }
         } else if (slide.template === 'bio') {
-          const photoUrl = data.photo_url || (data.github_username ? `https://github.com/${data.github_username}.png` : '')
+          // Use avatars.githubusercontent.com directly — github.com/{user}.png redirects cross-domain without CORS headers
+          const username = data.github_username
+          const photoUrl = data.photo_url || (username ? `https://avatars.githubusercontent.com/${username}` : '')
           if (photoUrl) {
             try {
-              // Use Image + canvas to convert to base64 (fetch fails on CORS redirects from github.com)
               const img = new Image()
               img.crossOrigin = 'anonymous'
               img.src = photoUrl
@@ -57,11 +58,11 @@ export function useExportPdf() {
                 img.onload = () => resolve()
                 img.onerror = () => reject(new Error('Image load failed'))
               })
-              const canvas = document.createElement('canvas')
-              canvas.width = img.naturalWidth
-              canvas.height = img.naturalHeight
-              canvas.getContext('2d')!.drawImage(img, 0, 0)
-              imageDataUrls[i] = canvas.toDataURL('image/png')
+              const cvs = document.createElement('canvas')
+              cvs.width = img.naturalWidth
+              cvs.height = img.naturalHeight
+              cvs.getContext('2d')!.drawImage(img, 0, 0)
+              imageDataUrls[i] = cvs.toDataURL('image/png')
             } catch {}
           }
         }
@@ -182,7 +183,7 @@ function renderSlideHtml(slide: any, theme: any, diagramSvg?: string, bioImage?:
         </div>`
 
     case 'bio':
-      const bioPhotoSrc = bioImage || (data.photo_url || (data.github_username ? `https://github.com/${data.github_username}.png` : ''))
+      const bioPhotoSrc = bioImage || (data.photo_url || (data.github_username ? `https://avatars.githubusercontent.com/${data.github_username}` : ''))
       return `
         <div style="display:flex;gap:60px;align-items:center;width:100%;padding:20px;">
           <div style="flex-shrink:0;">
