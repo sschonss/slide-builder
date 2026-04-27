@@ -129,6 +129,7 @@ onUnmounted(() => {
   justify-content: center;
   padding: 0;
   transition: transform 0.3s ease;
+  overflow: hidden;
 }
 
 .slide-container :deep(.preview-wrapper) {
@@ -136,12 +137,14 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   aspect-ratio: auto;
+  overflow: hidden;
 }
 
 .slide-container :deep(.slide) {
   border-radius: 0;
   box-shadow: none;
   padding: 60px 80px;
+  overflow: hidden;
 }
 
 .slide-container :deep(h1) {
@@ -208,45 +211,55 @@ onUnmounted(() => {
 
 /* Bio — fullscreen overrides */
 .slide-container :deep(.bio-slide) {
-  gap: 80px;
+  gap: 60px;
 }
 .slide-container :deep(.avatar) {
-  width: 320px;
-  height: 320px;
+  width: min(280px, 35vh);
+  height: min(280px, 35vh);
   border-width: 4px;
 }
 .slide-container :deep(.avatar-placeholder) {
-  width: 320px;
-  height: 320px;
-  font-size: 96px;
+  width: min(280px, 35vh);
+  height: min(280px, 35vh);
+  font-size: 80px;
 }
 .slide-container :deep(.bio-info h1) {
-  font-size: 52px;
-  margin-bottom: 20px;
+  font-size: 48px;
+  margin-bottom: 16px;
 }
 .slide-container :deep(.bio-info ul) {
-  font-size: 32px;
-  line-height: 2;
-  padding-left: 40px;
+  font-size: 28px;
+  line-height: 1.8;
+  padding-left: 36px;
 }
 
 /* Credits — fullscreen overrides */
 .slide-container :deep(.credits-slide) {
-  gap: 40px;
+  gap: 32px;
+  justify-content: center;
 }
 .slide-container :deep(.credits-badge) {
-  font-size: 64px;
+  font-size: 56px;
   letter-spacing: 4px;
 }
 .slide-container :deep(.credits-message) {
-  font-size: 36px;
+  font-size: 32px;
 }
 .slide-container :deep(.qr-img) {
-  width: 260px;
-  height: 260px;
+  width: min(220px, 30vh);
+  height: min(220px, 30vh);
 }
 .slide-container :deep(.credits-url) {
-  font-size: 22px;
+  font-size: 20px;
+}
+
+/* Content — prevent overflow */
+.slide-container :deep(.content-slide) {
+  overflow: hidden;
+}
+.slide-container :deep(.code-block) {
+  max-height: 60vh;
+  overflow: hidden;
 }
 
 .slide-counter {
