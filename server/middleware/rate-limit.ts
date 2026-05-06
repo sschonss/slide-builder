@@ -1,7 +1,7 @@
 import { RateLimiter } from '../utils/rate-limiter'
 
-const writeLimiter = new RateLimiter({ windowMs: 60_000, maxRequests: 30 })
-const readLimiter = new RateLimiter({ windowMs: 60_000, maxRequests: 100 })
+const writeLimiter = new RateLimiter({ windowMs: 60_000, maxRequests: 600 })
+const readLimiter = new RateLimiter({ windowMs: 60_000, maxRequests: 1200 })
 
 // Cleanup stale entries every 5 minutes.
 // .unref() prevents the timer from keeping the Node event loop alive,
