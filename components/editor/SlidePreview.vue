@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Slide, ThemeConfig, CoverData, SectionData, ContentData, DiagramData, CodeData, ComparisonData, BioData, CreditsData } from '~/types'
+import type { Slide, ThemeConfig, CoverData, SectionData, ContentData, DiagramData, CodeData, ComparisonData, BioData, CreditsData, VerticalAlign } from '~/types'
 import mermaid from 'mermaid'
 
 const props = defineProps<{ slide: Slide; theme?: ThemeConfig; presentationId?: string }>()
@@ -8,6 +8,22 @@ const emit = defineEmits<{ (e: 'image-dropped', payload: { path: string; filenam
 const bg = computed(() => props.theme?.colors?.background || '#1a1a2e')
 const primary = computed(() => props.theme?.colors?.primary || '#e94560')
 const textColor = computed(() => props.theme?.colors?.text || '#ffffff')
+
+const VERTICAL_ALIGN_MAP: Record<VerticalAlign, string> = {
+  top: 'flex-start',
+  center: 'center',
+  bottom: 'flex-end',
+}
+const verticalAlign = computed<VerticalAlign>(() => {
+  const v = (props.slide.data as any)?.vertical_align as VerticalAlign | undefined
+  return v && VERTICAL_ALIGN_MAP[v] ? v : 'top'
+})
+const slideStyle = computed(() => ({
+  background: bg.value,
+  color: textColor.value,
+  alignItems: VERTICAL_ALIGN_MAP[verticalAlign.value],
+}))
+const slideClass = computed(() => `align-${verticalAlign.value}`)
 
 const mermaidSvg = ref('')
 const mermaidContainer = ref<HTMLDivElement | null>(null)
@@ -72,7 +88,7 @@ async function onDrop(e: DragEvent) {
 
 <template>
   <div class="preview-wrapper">
-    <div class="slide" :style="{ background: bg, color: textColor }"
+    <div class="slide" :class="slideClass" :style="slideStyle"
          @dragover="onDragOver" @dragleave="onDragLeave" @drop="onDrop">
       <div v-if="isDragging" class="drop-overlay">
         <span>📷 Solte a imagem aqui</span>
@@ -233,6 +249,15 @@ h2 { font-size: 18px; opacity: 0.7; }
 .bio-info ul { list-style: disc; padding-left: 24px; font-size: 18px; line-height: 1.8; margin-top: 8px; }
 
 .credits-slide { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; width: 100%; height: 100%; }
+
+/* Vertical alignment overrides for inner containers that fill 100% height */
+.slide.align-top .cover,
+.slide.align-top .section-slide,
+.slide.align-top .credits-slide { justify-content: flex-start; }
+.slide.align-bottom .cover,
+.slide.align-bottom .section-slide,
+.slide.align-bottom .credits-slide { justify-content: flex-end; }
+/* center is already the default for these containers */
 .credits-badge { font-size: 36px; font-weight: 700; letter-spacing: 2px; }
 .credits-message { font-size: 22px; opacity: 0.7; }
 .qr-img { width: 160px; height: 160px; border-radius: 8px; }

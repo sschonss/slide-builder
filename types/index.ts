@@ -1,5 +1,7 @@
 export type SlideTemplate = 'cover' | 'section' | 'content' | 'diagram' | 'code' | 'comparison' | 'bio' | 'credits'
 
+export type VerticalAlign = 'top' | 'center' | 'bottom'
+
 export interface CoverData {
   title: string
   subtitle: string
