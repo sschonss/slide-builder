@@ -3,11 +3,16 @@ import { RateLimiter } from '../utils/rate-limiter'
 const writeLimiter = new RateLimiter({ windowMs: 60_000, maxRequests: 30 })
 const readLimiter = new RateLimiter({ windowMs: 60_000, maxRequests: 100 })
 
-// Cleanup stale entries every 5 minutes
-setInterval(() => {
+// Cleanup stale entries every 5 minutes.
+// .unref() prevents the timer from keeping the Node event loop alive,
+// which would hang prerender/build processes indefinitely.
+const cleanupInterval = setInterval(() => {
   writeLimiter.cleanup()
   readLimiter.cleanup()
 }, 5 * 60_000)
+if (typeof cleanupInterval.unref === 'function') {
+  cleanupInterval.unref()
+}
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
