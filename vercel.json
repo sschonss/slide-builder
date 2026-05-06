@@ -1,4 +1,10 @@
 {
+  "installCommand": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1 npm install --no-audit --no-fund --prefer-offline",
+  "build": {
+    "env": {
+      "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1"
+    }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/auth/(.*)", "destination": "/auth/$1" },
